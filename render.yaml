@@ -1,0 +1,24 @@
+databases:
+  - name: github-bot-db
+    databaseName: analyzer
+    user: github_bot_user
+    plan: free
+    region: oregon
+
+services:
+  - type: web
+    name: github-bot
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn analyzer.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: "2"
