@@ -1,7 +1,5 @@
-"""
-MongoDB database connection and operations utility.
-"""
 import os
+import certifi
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from datetime import datetime
@@ -36,7 +34,12 @@ class MongoDBConnection:
             if not mongodb_uri:
                 raise ValueError("MONGODB_URI environment variable is not set")
             
-            self._client = MongoClient(mongodb_uri, serverSelectionTimeoutMS=5000)
+            # Use certifi for SSL certificate verification
+            self._client = MongoClient(
+                mongodb_uri, 
+                serverSelectionTimeoutMS=5000,
+                tlsCAFile=certifi.where()
+            )
             self._db = self._client[db_name]
             
             # Test connection
