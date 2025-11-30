@@ -1,0 +1,494 @@
+{% extends "github_bot/base.html" %}
+
+{% block title %}GitHub Assistant{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<style>
+    /* Elegant markdown styling */
+    .markdown-body {
+        line-height: 1.7;
+        color: #374151;
+    }
+
+    .markdown-body ul {
+        list-style-type: disc;
+        padding-left: 1.5em;
+        margin: 0.75em 0;
+    }
+
+    .markdown-body ol {
+        list-style-type: decimal;
+        padding-left: 1.5em;
+        margin: 0.75em 0;
+    }
+
+    .markdown-body li {
+        margin: 0.35em 0;
+    }
+
+    .markdown-body p {
+        margin: 0.75em 0;
+    }
+
+    .markdown-body strong {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .markdown-body code {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 0.25em 0.5em;
+        border-radius: 0.375rem;
+        font-size: 0.9em;
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-weight: 500;
+    }
+
+    .user-message .markdown-body code {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+
+    .markdown-body pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1.25em;
+        border-radius: 0.75rem;
+        overflow-x: auto;
+        margin: 1em 0;
+        border: 1px solid #334155;
+    }
+
+    .markdown-body pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        font-weight: 400;
+    }
+
+    .markdown-body h2 {
+        font-weight: 600;
+        font-size: 1.25em;
+        margin: 1.5em 0 0.75em;
+        color: #111827;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0.5em;
+    }
+
+    .markdown-body h3 {
+        font-weight: 600;
+        font-size: 1.1em;
+        margin: 1.25em 0 0.5em;
+        color: #374151;
+    }
+
+    /* Elegant message animations */
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-enter {
+        animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Typing cursor */
+    .typing-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        background: #22c55e;
+        margin-left: 2px;
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+
+        0%,
+        49% {
+            opacity: 1;
+        }
+
+        50%,
+        100% {
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Elegant Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/60 sticky top-0 z-20">
+        <div class="max-w-5xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between gap-4">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="hidden sm:block">
+                        <h1 class="text-lg font-semibold text-gray-900">GitHub Assistant</h1>
+                        <p class="text-xs text-gray-500">AI-Powered Repository Analysis</p>
+                    </div>
+                    <h1 class="sm:hidden text-lg font-semibold text-gray-900">GitHub Assistant</h1>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2">
+                    <a href="/code-review/"
+                        class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg hover:shadow-md transition-all">
+                        <span class="hidden sm:inline">Code Review</span>
+                        <span class="sm:hidden">Review</span>
+                    </a>
+                    <select id="modelSelect"
+                        class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white transition-all">
+                        <option value="2">Llama 3.3 70B</option>
+                        <option value="1">Llama 3.1 8B</option>
+                    </select>
+                    <button id="clearHistoryBtn"
+                        class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                        title="Clear chat">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages Area -->
+    <main class="flex-1 overflow-y-auto">
+        <div class="max-w-4xl mx-auto px-4 py-6" id="messagesContainer">
+            <!-- Welcome Message -->
+            <div id="welcomeMessage" class="text-center py-16 sm:py-20">
+                <div
+                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-accent-100 rounded-3xl mb-6 shadow-sm">
+                    <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                        </path>
+                    </svg>
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Welcome</h2>
+                <p class="text-gray-600 mb-10 max-w-md mx-auto text-lg">Ask me anything about your GitHub repositories
+                </p>
+
+                <!-- Quick Actions -->
+                <div class="flex flex-wrap gap-3 justify-center max-w-2xl mx-auto">
+                    <button
+                        class="suggestion-btn px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-sm hover:shadow">
+                        What repositories do I have?
+                    </button>
+                    <button
+                        class="suggestion-btn px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-sm hover:shadow">
+                        Show my most popular repo
+                    </button>
+                    <button
+                        class="suggestion-btn px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-sm hover:shadow">
+                        What languages do I use?
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Input Area -->
+    <footer class="bg-white/80 backdrop-blur-md border-t border-gray-200/60 sticky bottom-0">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <form id="chatForm" class="flex gap-3">
+                <textarea id="promptInput" rows="1" placeholder="Ask about your repositories..."
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 resize-none text-sm sm:text-base transition-all shadow-sm"
+                    style="max-height: 120px;"></textarea>
+                <button type="submit" id="sendBtn"
+                    class="px-5 sm:px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay"
+        class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-lg">Processing...</p>
+                    <p class="text-sm text-gray-500">Analyzing repositories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    marked.use({ breaks: true, gfm: true });
+
+    let conversationId = null;
+    let isLoading = false;
+    let currentStreamingMessage = null;
+
+    const chatForm = document.getElementById('chatForm');
+    const promptInput = document.getElementById('promptInput');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const sendBtn = document.getElementById('sendBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const modelSelect = document.getElementById('modelSelect');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    // Auto-resize textarea
+    promptInput.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Handle Enter key
+    promptInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isLoading) chatForm.dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Suggestion buttons
+    document.querySelectorAll('.suggestion-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            promptInput.value = this.textContent.trim();
+            promptInput.focus();
+            promptInput.dispatchEvent(new Event('input'));
+        });
+    });
+
+    // Add message
+    function addMessage(content, role = 'user', isStreaming = false) {
+        if (welcomeMessage) welcomeMessage.style.display = 'none';
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} mb-6 message-enter`;
+
+        const bubble = document.createElement('div');
+        bubble.className = `max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 text-sm sm:text-base markdown-body ${role === 'user'
+            ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white user-message shadow-md'
+            : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
+            }`;
+
+        if (isStreaming) {
+            bubble.id = 'streaming-message';
+            bubble.innerHTML = content;
+        } else {
+            try {
+                const parsed = marked.parse(content);
+                const sanitized = DOMPurify.sanitize(parsed);
+                bubble.innerHTML = sanitized;
+            } catch (e) {
+                bubble.textContent = content;
+            }
+        }
+
+        messageDiv.appendChild(bubble);
+        messagesContainer.appendChild(messageDiv);
+
+        // Scroll to bottom immediately and after render
+        const scrollToBottom = () => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+
+        scrollToBottom();
+        requestAnimationFrame(() => {
+            scrollToBottom();
+            setTimeout(scrollToBottom, 50);
+        });
+
+        return bubble;
+    }
+
+    // Update streaming message
+    function updateStreamingMessage(content) {
+        const bubble = document.getElementById('streaming-message');
+        if (bubble) {
+            try {
+                const parsed = marked.parse(content);
+                const sanitized = DOMPurify.sanitize(parsed);
+                bubble.innerHTML = sanitized;
+            } catch (e) {
+                bubble.textContent = content;
+            }
+
+            // Auto-scroll to bottom - use both methods for reliability
+            const scrollToBottom = () => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            };
+
+            // Immediate scroll
+            scrollToBottom();
+
+            // Also scroll after render completes
+            requestAnimationFrame(() => {
+                scrollToBottom();
+                // Double-check after a tiny delay to ensure content is rendered
+                setTimeout(scrollToBottom, 10);
+            });
+        }
+    }
+
+    // Show/hide loading
+    function setLoading(loading) {
+        isLoading = loading;
+        sendBtn.disabled = loading;
+        if (!loading) {
+            loadingOverlay.classList.add('hidden');
+        }
+    }
+
+    // Handle form submission with streaming
+    chatForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const prompt = promptInput.value.trim();
+        if (!prompt || isLoading) return;
+
+        addMessage(prompt, 'user');
+        promptInput.value = '';
+        promptInput.style.height = 'auto';
+        setLoading(true);
+        loadingOverlay.classList.remove('hidden');
+
+        try {
+            const requestBody = {
+                prompt: prompt,
+                model_id: parseInt(modelSelect.value)
+            };
+
+            if (conversationId) {
+                requestBody.conversation_id = conversationId;
+            }
+
+            // Use EventSource for Server-Sent Events
+            const response = await fetch('/api/chat/stream/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            // Read the stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullResponse = '';
+            let messageBubble = null;
+
+            loadingOverlay.classList.add('hidden');
+
+            while (true) {
+                const { done, value } = await reader.read();
+
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.slice(6));
+
+                        if (data.type === 'conversation_id') {
+                            conversationId = data.conversation_id;
+                        } else if (data.type === 'content') {
+                            fullResponse += data.content;
+
+                            if (!messageBubble) {
+                                messageBubble = addMessage(fullResponse, 'assistant', true);
+                            } else {
+                                updateStreamingMessage(fullResponse);
+                            }
+                        } else if (data.type === 'error') {
+                            if (!messageBubble) {
+                                addMessage(`⚠️ ${data.error}`, 'assistant');
+                            }
+                        } else if (data.done) {
+                            // Streaming complete
+                            if (messageBubble) {
+                                messageBubble.removeAttribute('id');
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            loadingOverlay.classList.add('hidden');
+            addMessage('⚠️ Sorry, there was an error. Please try again.', 'assistant');
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // Clear history
+    clearHistoryBtn.addEventListener('click', async function () {
+        const hasMessages = messagesContainer.querySelectorAll('.message-enter').length > 0;
+
+        if (!conversationId && !hasMessages) return;
+
+        if (!confirm('Clear conversation history?')) return;
+
+        try {
+            const messages = messagesContainer.querySelectorAll('.message-enter');
+            messages.forEach(msg => msg.remove());
+
+            if (welcomeMessage) welcomeMessage.style.display = 'block';
+
+            const currentConversationId = conversationId;
+            conversationId = null;
+
+            if (currentConversationId) {
+                await fetch('/api/chat/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: 'Clear history',
+                        conversation_id: currentConversationId,
+                        clear_history: true
+                    })
+                }).catch(() => { });
+            }
+        } catch (error) {
+            console.error('Error clearing history:', error);
+        }
+    });
+</script>
+{% endblock %}

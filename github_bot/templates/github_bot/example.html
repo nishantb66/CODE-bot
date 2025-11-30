@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GitHub Bot{% endblock %}</title>
+</head>
+<body>
+    <h1>{% block heading %}Welcome to GitHub Bot{% endblock %}</h1>
+    
+    {% block content %}
+    <p>This is a Jinja2 template example.</p>
+    {% endblock %}
+    
+    {# Example of using Django's url function in Jinja2 #}
+    {# <a href="{{ url('github_bot:index') }}">Home</a> #}
+    
+    {# Example of using static files #}
+    {# <link rel="stylesheet" href="{{ static('css/style.css') }}"> #}
+</body>
+</html>
+

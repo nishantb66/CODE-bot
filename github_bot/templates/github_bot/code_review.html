@@ -1,0 +1,561 @@
+{% extends "github_bot/base.html" %}
+
+{% block title %}Code Review - GitHub Assistant{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<style>
+    /* Elegant markdown styling */
+    .markdown-body {
+        line-height: 1.7;
+        color: #374151;
+    }
+
+    .markdown-body ul {
+        list-style-type: disc;
+        padding-left: 1.5em;
+        margin: 0.75em 0;
+    }
+
+    .markdown-body ol {
+        list-style-type: decimal;
+        padding-left: 1.5em;
+        margin: 0.75em 0;
+    }
+
+    .markdown-body li {
+        margin: 0.35em 0;
+    }
+
+    .markdown-body p {
+        margin: 0.75em 0;
+    }
+
+    .markdown-body strong {
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .markdown-body code {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 0.25em 0.5em;
+        border-radius: 0.375rem;
+        font-size: 0.9em;
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-weight: 500;
+    }
+
+    .markdown-body pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1.25em;
+        border-radius: 0.75rem;
+        overflow-x: auto;
+        margin: 1em 0;
+        border: 1px solid #334155;
+    }
+
+    .markdown-body pre code {
+        background: transparent;
+        color: inherit;
+        padding: 0;
+        font-weight: 400;
+    }
+
+    .markdown-body h2 {
+        font-weight: 600;
+        font-size: 1.25em;
+        margin: 1.5em 0 0.75em;
+        color: #111827;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0.5em;
+    }
+
+    .markdown-body h3 {
+        font-weight: 600;
+        font-size: 1.1em;
+        margin: 1.25em 0 0.5em;
+        color: #374151;
+    }
+
+    /* Code editor */
+    textarea.code-editor {
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+
+    /* Custom scrollbar for results */
+    #results-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #results-content::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    #results-content::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
+        border-radius: 3px;
+    }
+
+    /* Elegant animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Elegant Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/60 sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-gray-900">Code Review</h1>
+                        <p class="text-xs text-gray-500 hidden sm:block">AI-Powered Code Analysis</p>
+                    </div>
+                </div>
+                <a href="/"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                    ← Back to Chat
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-6">
+        <div class="max-w-7xl mx-auto px-4">
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+                <button onclick="switchTab('snippet')" id="tab-snippet"
+                    class="tab-active flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm transition-all bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-sm">
+                    Code Snippet
+                </button>
+                <button onclick="switchTab('file')" id="tab-file"
+                    class="flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 hover:bg-white/80 transition-all">
+                    GitHub File
+                </button>
+                <button onclick="switchTab('improve')" id="tab-improve"
+                    class="flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 hover:bg-white/80 transition-all">
+                    Improvements
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Input Panel -->
+                <div class="space-y-6">
+                    <!-- Code Snippet Tab -->
+                    <div id="panel-snippet" class="tab-panel">
+                        <div
+                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-6 space-y-5 shadow-sm">
+                            <h2 class="text-lg font-semibold text-gray-900">Review Code Snippet</h2>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                                <select id="snippet-language"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="go">Go</option>
+                                    <option value="rust">Rust</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <textarea id="snippet-code" rows="12"
+                                    class="code-editor w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 resize-none transition-all"
+                                    placeholder="Paste your code here..."></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Context (Optional)</label>
+                                <input type="text" id="snippet-context"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    placeholder="e.g., Function to process user data">
+                            </div>
+
+                            <button onclick="reviewSnippet()"
+                                class="w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md">
+                                Review Code
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GitHub File Tab -->
+                    <div id="panel-file" class="tab-panel hidden">
+                        <div
+                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-6 space-y-5 shadow-sm">
+                            <h2 class="text-lg font-semibold text-gray-900">Review GitHub File</h2>
+
+                            <div class="bg-blue-50/80 border border-blue-200/60 rounded-xl p-3.5 text-sm text-blue-800">
+                                <p class="font-medium mb-1">💡 Tip</p>
+                                <p>Paste a full GitHub URL and we'll parse it automatically!</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner</label>
+                                <input type="text" id="file-owner"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    placeholder="e.g., octocat">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Repository</label>
+                                <input type="text" id="file-repo"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    placeholder="e.g., my-project">
+                                <p class="text-xs text-gray-500 mt-1.5">Use underscores or hyphens, not spaces</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">File Path or URL</label>
+                                <input type="text" id="file-path"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    placeholder="e.g., src/main.py or paste GitHub URL"
+                                    onpaste="handleGitHubUrlPaste(event)">
+                                <p class="text-xs text-gray-500 mt-1.5">File path from repository root</p>
+                            </div>
+
+                            <button onclick="reviewFile()"
+                                class="w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md">
+                                Review File
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Improvements Tab -->
+                    <div id="panel-improve" class="tab-panel hidden">
+                        <div
+                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-6 space-y-5 shadow-sm">
+                            <h2 class="text-lg font-semibold text-gray-900">Get Improvement Suggestions</h2>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                                <select id="improve-language"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all">
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <textarea id="improve-code" rows="10"
+                                    class="code-editor w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 resize-none transition-all"
+                                    placeholder="Paste your code here..."></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Focus Areas</label>
+                                <div class="space-y-2.5">
+                                    <label class="flex items-center gap-2.5">
+                                        <input type="checkbox" value="performance"
+                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm">Performance</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5">
+                                        <input type="checkbox" value="readability"
+                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm">Readability</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5">
+                                        <input type="checkbox" value="security"
+                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm">Security</span>
+                                    </label>
+                                    <label class="flex items-center gap-2.5">
+                                        <input type="checkbox" value="best-practices"
+                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm">Best Practices</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button onclick="suggestImprovements()"
+                                class="w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md">
+                                Get Suggestions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="lg:sticky lg:top-24" style="max-height: calc(100vh - 120px);">
+                    <div id="results-container"
+                        class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 overflow-hidden flex flex-col shadow-sm"
+                        style="max-height: calc(100vh - 120px);">
+                        <div id="results-content" class="overflow-y-auto p-6 flex-1">
+                            <div class="text-center py-16">
+                                <div
+                                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-accent-100 rounded-3xl mb-6 shadow-sm">
+                                    <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to Review</h3>
+                                <p class="text-gray-600">Submit your code to get AI-powered feedback</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay"
+        class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-lg">Analyzing...</p>
+                    <p class="text-sm text-gray-500">This may take a few seconds</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    marked.use({ breaks: true, gfm: true });
+
+    function switchTab(tab) {
+        document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+            btn.classList.remove('tab-active', 'bg-gradient-to-r', 'from-primary-500', 'to-accent-500', 'text-white', 'shadow-sm');
+            btn.classList.add('text-gray-700', 'hover:bg-white/80');
+        });
+        const activeTab = document.getElementById(`tab-${tab}`);
+        activeTab.classList.add('tab-active', 'bg-gradient-to-r', 'from-primary-500', 'to-accent-500', 'text-white', 'shadow-sm');
+        activeTab.classList.remove('text-gray-700', 'hover:bg-white/80');
+
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+        document.getElementById(`panel-${tab}`).classList.remove('hidden');
+    }
+
+    function showLoading() {
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    function displayResults(data) {
+        const container = document.getElementById('results-content');
+
+        if (data.success) {
+            const review = data.review?.full_review || data.suggestions || 'No review available';
+            const parsed = marked.parse(review);
+            const sanitized = DOMPurify.sanitize(parsed);
+
+            container.innerHTML = `
+                <div class="fade-in">
+                    <div class="flex items-center justify-between mb-5 pb-4 border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-sm z-10">
+                        <h3 class="font-semibold text-gray-900 text-lg">Review Results</h3>
+                        <span class="px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                            ✓ Complete
+                        </span>
+                    </div>
+                    <div class="markdown-body">
+                        ${sanitized}
+                    </div>
+                    ${data.metadata ? `
+                        <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 sticky bottom-0 bg-white/80 backdrop-blur-sm">
+                            Analyzed in ${data.metadata.duration_ms}ms
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            container.scrollTop = 0;
+        } else {
+            container.innerHTML = `
+                <div class="fade-in text-center py-12">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-3xl mb-4">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2 text-lg">Error</h3>
+                    <p class="text-gray-600 text-sm">${data.error || 'An error occurred'}</p>
+                </div>
+            `;
+        }
+    }
+
+    async function reviewSnippet() {
+        const code = document.getElementById('snippet-code').value.trim();
+        const language = document.getElementById('snippet-language').value;
+        const context = document.getElementById('snippet-context').value.trim();
+
+        if (!code) {
+            alert('Please enter some code to review');
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const response = await fetch('/api/review-code/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language, context, model_id: 2 })
+            });
+
+            const data = await response.json();
+            displayResults(data);
+        } catch (error) {
+            displayResults({ success: false, error: 'Failed to connect to server' });
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function reviewFile() {
+        let owner = document.getElementById('file-owner').value.trim();
+        let repo = document.getElementById('file-repo').value.trim();
+        let file_path = document.getElementById('file-path').value.trim();
+
+        if (repo) repo = repo.replace(/\s+/g, '_');
+
+        if (file_path.includes('github.com')) {
+            const parsed = parseGitHubUrl(file_path);
+            if (parsed) {
+                owner = parsed.owner;
+                repo = parsed.repo;
+                file_path = parsed.path;
+                document.getElementById('file-owner').value = owner;
+                document.getElementById('file-repo').value = repo;
+                document.getElementById('file-path').value = file_path;
+            }
+        }
+
+        file_path = file_path.replace(/^https?:\/\/[^\/]+\//, '');
+        file_path = file_path.replace(/^[^\/]+\/[^\/]+\/blob\/[^\/]+\//, '');
+
+        if (!owner || !repo || !file_path) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const response = await fetch('/api/review-file/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owner, repo, file_path, model_id: 2 })
+            });
+
+            const data = await response.json();
+            displayResults(data);
+        } catch (error) {
+            displayResults({ success: false, error: 'Failed to connect to server' });
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function parseGitHubUrl(url) {
+        try {
+            const patterns = [
+                /github\.com\/([^\/]+)\/([^\/]+)\/blob\/[^\/]+\/(.+)/,
+                /github\.com\/([^\/]+)\/([^\/]+)\/tree\/[^\/]+\/(.+)/,
+            ];
+
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return {
+                        owner: match[1],
+                        repo: match[2].replace(/\.git$/, ''),
+                        path: match[3]
+                    };
+                }
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function handleGitHubUrlPaste(event) {
+        setTimeout(() => {
+            const pastedText = event.target.value;
+            if (pastedText.includes('github.com')) {
+                const parsed = parseGitHubUrl(pastedText);
+                if (parsed) {
+                    document.getElementById('file-owner').value = parsed.owner;
+                    document.getElementById('file-repo').value = parsed.repo;
+                    document.getElementById('file-path').value = parsed.path;
+                    event.target.classList.add('border-green-400');
+                    setTimeout(() => event.target.classList.remove('border-green-400'), 1000);
+                }
+            }
+        }, 10);
+    }
+
+    async function suggestImprovements() {
+        const code = document.getElementById('improve-code').value.trim();
+        const language = document.getElementById('improve-language').value;
+        const focusAreas = Array.from(document.querySelectorAll('.focus-area:checked')).map(cb => cb.value);
+
+        if (!code) {
+            alert('Please enter some code');
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const response = await fetch('/api/suggest-improvements/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, language, focus_areas: focusAreas, model_id: 2 })
+            });
+
+            const data = await response.json();
+            displayResults(data);
+        } catch (error) {
+            displayResults({ success: false, error: 'Failed to connect to server' });
+        } finally {
+            hideLoading();
+        }
+    }
+</script>
+{% endblock %}

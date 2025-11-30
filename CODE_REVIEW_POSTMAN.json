@@ -1,0 +1,222 @@
+{
+    "info": {
+        "name": "GitHub Bot - Code Review API",
+        "description": "API collection for testing the Code Review feature",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Chat",
+            "item": [
+                {
+                    "name": "Send Chat Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"prompt\": \"What repositories do I have?\",\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/chat/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "chat",
+                                ""
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Code Review",
+            "item": [
+                {
+                    "name": "Review Code Snippet - Python",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"def calculate_sum(numbers):\\n    total = 0\\n    for num in numbers:\\n        total = total + num\\n    return total\",\n  \"language\": \"python\",\n  \"context\": \"Function to calculate sum of numbers in a list\",\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/review-code/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "review-code",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Review Code Snippet - JavaScript",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"function fetchData(url) {\\n  var xhr = new XMLHttpRequest();\\n  xhr.open('GET', url, false);\\n  xhr.send();\\n  return xhr.responseText;\\n}\",\n  \"language\": \"javascript\",\n  \"context\": \"Function to fetch data from API\",\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/review-code/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "review-code",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Review GitHub File",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"owner\": \"YOUR_GITHUB_USERNAME\",\n  \"repo\": \"YOUR_REPO_NAME\",\n  \"file_path\": \"path/to/file.py\",\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/review-file/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "review-file",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Suggest Improvements - Performance",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"def find_duplicates(items):\\n    duplicates = []\\n    for i in range(len(items)):\\n        for j in range(i + 1, len(items)):\\n            if items[i] == items[j]:\\n                if items[i] not in duplicates:\\n                    duplicates.append(items[i])\\n    return duplicates\",\n  \"language\": \"python\",\n  \"focus_areas\": [\"performance\", \"readability\"],\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/suggest-improvements/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "suggest-improvements",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Suggest Improvements - Security",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"def execute_query(user_input):\\n    query = 'SELECT * FROM users WHERE username = \\\"' + user_input + '\\\"'\\n    cursor.execute(query)\\n    return cursor.fetchall()\",\n  \"language\": \"python\",\n  \"focus_areas\": [\"security\"],\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/suggest-improvements/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "suggest-improvements",
+                                ""
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Review Complex Code",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"class DataProcessor:\\n    def __init__(self, data):\\n        self.data = data\\n        self.processed = False\\n    \\n    def process(self):\\n        try:\\n            result = []\\n            for item in self.data:\\n                if type(item) == dict:\\n                    result.append(item['value'])\\n            self.processed = True\\n            return result\\n        except:\\n            return None\",\n  \"language\": \"python\",\n  \"context\": \"Class for processing data from API\",\n  \"model_id\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/review-code/",
+                            "protocol": "http",
+                            "host": [
+                                "localhost"
+                            ],
+                            "port": "8000",
+                            "path": [
+                                "api",
+                                "review-code",
+                                ""
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
