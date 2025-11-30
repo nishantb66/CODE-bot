@@ -24,7 +24,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-produc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# ALLOWED_HOSTS Configuration
+# For development: ALLOWED_HOSTS=* (allows all)
+# For production: ALLOWED_HOSTS=.onrender.com,yourdomain.com
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+if allowed_hosts_env == '*':
+    ALLOWED_HOSTS = ['*']  # Allow all hosts (development only!)
+else:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
 
 
 # Application definition
