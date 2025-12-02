@@ -124,6 +124,50 @@
             opacity: 0;
         }
     }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 16px;
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        animation: typingDot 1.4s infinite;
+        opacity: 0.4;
+    }
+
+    .typing-indicator span:nth-child(1) {
+        animation-delay: 0s;
+    }
+
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typingDot {
+
+        0%,
+        60%,
+        100% {
+            opacity: 0.4;
+            transform: scale(1);
+        }
+
+        30% {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -152,6 +196,16 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
+                    <button id="generateReportBtn"
+                        class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:shadow-md transition-all flex items-center gap-1.5"
+                        title="Generate Repository Report">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <span class="hidden sm:inline">Report</span>
+                    </button>
                     <a href="/code-review/"
                         class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg hover:shadow-md transition-all">
                         <span class="hidden sm:inline">Code Review</span>
@@ -243,6 +297,132 @@
             </div>
         </div>
     </div>
+
+    <!-- Report Generation Modal -->
+    <div id="reportModal"
+        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-white">Generate Repository Report</h2>
+                        <p class="text-sm text-white/80">Create a comprehensive PDF report</p>
+                    </div>
+                </div>
+                <button id="closeReportModal" class="text-white/80 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- Input Section -->
+                <div id="reportInputSection">
+                    <div class="mb-6">
+                        <label for="repoUrlInput" class="block text-sm font-medium text-gray-700 mb-2">
+                            Repository URL
+                        </label>
+                        <div class="flex gap-3">
+                            <input type="url" id="repoUrlInput" placeholder="https://github.com/owner/repository"
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all">
+                            <button id="generateBtn"
+                                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Generate
+                            </button>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            Enter a public GitHub repository URL to generate a detailed analysis report
+                        </p>
+                    </div>
+
+                    <!-- Examples -->
+                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
+                        <p class="text-sm font-medium text-gray-700 mb-2">📌 Example URLs:</p>
+                        <div class="space-y-1">
+                            <button class="example-url text-sm text-purple-600 hover:text-purple-700 block">
+                                https://github.com/torvalds/linux
+                            </button>
+                            <button class="example-url text-sm text-purple-600 hover:text-purple-700 block">
+                                https://github.com/facebook/react
+                            </button>
+                            <button class="example-url text-sm text-purple-600 hover:text-purple-700 block">
+                                https://github.com/microsoft/vscode
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="reportLoadingSection" class="hidden text-center py-12">
+                    <div
+                        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-4">
+                        <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin">
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">🤖 AI Analysis in Progress...</h3>
+                    <p class="text-sm text-gray-500">Analyzing repository with Llama 3.3 70B</p>
+                    <p class="text-xs text-gray-400 mt-2">This may take 10-20 seconds</p>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="reportPreviewSection" class="hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Report Preview</h3>
+                        <button id="downloadReportBtn"
+                            class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Download PDF
+                        </button>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-2 border border-gray-200">
+                        <iframe id="pdfPreview" class="w-full h-[500px] bg-white rounded"></iframe>
+                    </div>
+                    <div class="mt-4 flex justify-center">
+                        <button id="generateAnotherBtn"
+                            class="px-4 py-2 text-purple-600 hover:text-purple-700 font-medium transition-colors">
+                            ← Generate Another Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error Section -->
+                <div id="reportErrorSection" class="hidden">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-3">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-red-900 mb-2">Error Generating Report</h3>
+                        <p id="reportErrorMessage" class="text-sm text-red-700 mb-4"></p>
+                        <button id="tryAgainBtn"
+                            class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -313,15 +493,22 @@
         messageDiv.appendChild(bubble);
         messagesContainer.appendChild(messageDiv);
 
-        // Scroll to bottom immediately and after render
-        const scrollToBottom = () => {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Smooth scroll to bottom
+        const scrollToBottom = (smooth = false) => {
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
         };
 
-        scrollToBottom();
+        // Initial instant scroll
+        scrollToBottom(false);
+
+        // Smooth scroll after render
         requestAnimationFrame(() => {
-            scrollToBottom();
-            setTimeout(scrollToBottom, 50);
+            scrollToBottom(true);
+            setTimeout(() => scrollToBottom(true), 50);
+            setTimeout(() => scrollToBottom(true), 150);
         });
 
         return bubble;
@@ -339,19 +526,22 @@
                 bubble.textContent = content;
             }
 
-            // Auto-scroll to bottom - use both methods for reliability
-            const scrollToBottom = () => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Smooth auto-scroll as content streams in
+            const scrollToBottom = (smooth = true) => {
+                messagesContainer.scrollTo({
+                    top: messagesContainer.scrollHeight,
+                    behavior: smooth ? 'smooth' : 'auto'
+                });
             };
 
             // Immediate scroll
-            scrollToBottom();
+            scrollToBottom(false);
 
-            // Also scroll after render completes
+            // Smooth scroll after render
             requestAnimationFrame(() => {
-                scrollToBottom();
-                // Double-check after a tiny delay to ensure content is rendered
-                setTimeout(scrollToBottom, 10);
+                scrollToBottom(true);
+                setTimeout(() => scrollToBottom(true), 10);
+                setTimeout(() => scrollToBottom(true), 50);
             });
         }
     }
@@ -362,6 +552,52 @@
         sendBtn.disabled = loading;
         if (!loading) {
             loadingOverlay.classList.add('hidden');
+        }
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+        if (welcomeMessage) welcomeMessage.style.display = 'none';
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'flex justify-start mb-6 message-enter';
+        messageDiv.id = 'typing-indicator-wrapper';
+
+        const bubble = document.createElement('div');
+        bubble.className = 'max-w-[85%] sm:max-w-[75%] rounded-2xl bg-white border border-gray-200 shadow-sm';
+
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'typing-indicator';
+        typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+
+        bubble.appendChild(typingIndicator);
+        messageDiv.appendChild(bubble);
+        messagesContainer.appendChild(messageDiv);
+
+        // Smooth scroll to show typing indicator
+        const scrollToBottom = (smooth = true) => {
+            messagesContainer.scrollTo({
+                top: messagesContainer.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
+            });
+        };
+
+        // Initial instant scroll
+        scrollToBottom(false);
+
+        // Smooth scroll after render
+        requestAnimationFrame(() => {
+            scrollToBottom(true);
+            setTimeout(() => scrollToBottom(true), 50);
+            setTimeout(() => scrollToBottom(true), 150);
+        });
+    }
+
+    // Hide typing indicator
+    function hideTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator-wrapper');
+        if (indicator) {
+            indicator.remove();
         }
     }
 
@@ -376,7 +612,9 @@
         promptInput.value = '';
         promptInput.style.height = 'auto';
         setLoading(true);
-        loadingOverlay.classList.remove('hidden');
+
+        // Show typing indicator instead of full-screen overlay
+        showTypingIndicator();
 
         try {
             const requestBody = {
@@ -408,7 +646,8 @@
             let fullResponse = '';
             let messageBubble = null;
 
-            loadingOverlay.classList.add('hidden');
+            // Hide typing indicator when stream starts
+            hideTypingIndicator();
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -449,7 +688,7 @@
 
         } catch (error) {
             console.error('Error:', error);
-            loadingOverlay.classList.add('hidden');
+            hideTypingIndicator();
             addMessage('⚠️ Sorry, there was an error. Please try again.', 'assistant');
         } finally {
             setLoading(false);
@@ -490,5 +729,158 @@
             console.error('Error clearing history:', error);
         }
     });
+
+    // ===== Report Generation Modal =====
+    const reportModal = document.getElementById('reportModal');
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const closeReportModal = document.getElementById('closeReportModal');
+    const repoUrlInput = document.getElementById('repoUrlInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadReportBtn = document.getElementById('downloadReportBtn');
+    const generateAnotherBtn = document.getElementById('generateAnotherBtn');
+    const tryAgainBtn = document.getElementById('tryAgainBtn');
+
+    const reportInputSection = document.getElementById('reportInputSection');
+    const reportLoadingSection = document.getElementById('reportLoadingSection');
+    const reportPreviewSection = document.getElementById('reportPreviewSection');
+    const reportErrorSection = document.getElementById('reportErrorSection');
+    const pdfPreview = document.getElementById('pdfPreview');
+    const reportErrorMessage = document.getElementById('reportErrorMessage');
+
+    let currentPdfData = null;
+    let currentFilename = null;
+
+    // Open modal
+    generateReportBtn.addEventListener('click', () => {
+        reportModal.classList.remove('hidden');
+        resetReportModal();
+        repoUrlInput.focus();
+    });
+
+    // Close modal
+    closeReportModal.addEventListener('click', () => {
+        reportModal.classList.add('hidden');
+    });
+
+    // Close on backdrop click
+    reportModal.addEventListener('click', (e) => {
+        if (e.target === reportModal) {
+            reportModal.classList.add('hidden');
+        }
+    });
+
+    // Example URL clicks
+    document.querySelectorAll('.example-url').forEach(btn => {
+        btn.addEventListener('click', function () {
+            repoUrlInput.value = this.textContent.trim();
+            repoUrlInput.focus();
+        });
+    });
+
+    // Enter key in input
+    repoUrlInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            generateBtn.click();
+        }
+    });
+
+    // Generate report
+    generateBtn.addEventListener('click', async () => {
+        const repoUrl = repoUrlInput.value.trim();
+
+        if (!repoUrl) {
+            alert('Please enter a repository URL');
+            return;
+        }
+
+        if (!repoUrl.includes('github.com')) {
+            alert('Please enter a valid GitHub repository URL');
+            return;
+        }
+
+        // Show loading
+        reportInputSection.classList.add('hidden');
+        reportErrorSection.classList.add('hidden');
+        reportPreviewSection.classList.add('hidden');
+        reportLoadingSection.classList.remove('hidden');
+
+        try {
+            const response = await fetch('/api/generate-report/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ repo_url: repoUrl })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to generate report');
+            }
+
+            // Store PDF data
+            currentPdfData = data.pdf_base64;
+            currentFilename = data.filename;
+
+            // Show preview
+            const pdfDataUrl = `data:application/pdf;base64,${data.pdf_base64}`;
+            pdfPreview.src = pdfDataUrl;
+
+            reportLoadingSection.classList.add('hidden');
+            reportPreviewSection.classList.remove('hidden');
+
+        } catch (error) {
+            console.error('Error generating report:', error);
+            reportErrorMessage.textContent = error.message || 'Failed to generate report. Please try again.';
+            reportLoadingSection.classList.add('hidden');
+            reportErrorSection.classList.remove('hidden');
+        }
+    });
+
+    // Download report
+    downloadReportBtn.addEventListener('click', () => {
+        if (!currentPdfData || !currentFilename) return;
+
+        // Convert base64 to blob
+        const byteCharacters = atob(currentPdfData);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = currentFilename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    });
+
+    // Generate another report
+    generateAnotherBtn.addEventListener('click', () => {
+        resetReportModal();
+    });
+
+    // Try again
+    tryAgainBtn.addEventListener('click', () => {
+        resetReportModal();
+    });
+
+    // Reset modal to initial state
+    function resetReportModal() {
+        reportInputSection.classList.remove('hidden');
+        reportLoadingSection.classList.add('hidden');
+        reportPreviewSection.classList.add('hidden');
+        reportErrorSection.classList.add('hidden');
+        repoUrlInput.value = '';
+        currentPdfData = null;
+        currentFilename = null;
+    }
 </script>
 {% endblock %}

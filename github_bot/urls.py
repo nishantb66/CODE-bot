@@ -7,6 +7,7 @@ from github_bot.views.code_review_views import (
     FileReviewAPIView,
     ImprovementSuggestionsAPIView
 )
+from github_bot.views.report_views import generate_report, download_report
 
 app_name = 'github_bot'
 
@@ -19,6 +20,10 @@ urlpatterns = [
     path('review-code/', CodeReviewAPIView.as_view(), name='review_code'),
     path('review-file/', FileReviewAPIView.as_view(), name='review_file'),
     path('suggest-improvements/', ImprovementSuggestionsAPIView.as_view(), name='suggest_improvements'),
+    
+    # Report generation endpoints
+    path('generate-report/', generate_report, name='generate_report'),
+    path('download-report/', download_report, name='download_report'),
     
     # Web views
     path('code-review/', code_review_view, name='code_review_page'),
