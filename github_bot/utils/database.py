@@ -60,7 +60,7 @@ class MongoDBConnection:
             self._connect()
         return self._db
     
-    def get_collection(self, collection_name: str):
+    def get_collection(self, collection_name: str): 
         """Get a MongoDB collection."""
         return self.db[collection_name]
     

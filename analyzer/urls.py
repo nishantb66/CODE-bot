@@ -19,6 +19,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/auth/', include('authentication.urls')),  # Auth API endpoints
+    path('auth/', include('authentication.urls')),  # Auth web pages
+    path('sso/', include('authentication.urls')),  # SSO callbacks
     path('api/', include('github_bot.urls')),
     path('', include('github_bot.urls')),
 ]

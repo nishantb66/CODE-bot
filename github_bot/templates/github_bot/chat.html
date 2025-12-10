@@ -225,6 +225,64 @@
                             </path>
                         </svg>
                     </button>
+
+                    <!-- User Menu -->
+                    <div class="relative" id="userMenuContainer">
+                        <!-- Authenticated User -->
+                        <div id="authenticatedUser" class="hidden">
+                            <button id="userMenuBtn"
+                                class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                                <div
+                                    class="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                                    <span id="userInitials">U</span>
+                                </div>
+                                <span id="userName" class="hidden md:inline"></span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div id="userDropdown"
+                                class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-medium text-gray-900" id="dropdownUserName"></p>
+                                    <p class="text-xs text-gray-500" id="dropdownUserEmail"></p>
+                                </div>
+                                <button id="changePasswordBtn"
+                                    class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                                        </path>
+                                    </svg>
+                                    Change Password
+                                </button>
+                                <button id="logoutBtn"
+                                    class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                        </path>
+                                    </svg>
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Guest User  -->
+                        <div id="guestUser" class="flex items-center gap-2">
+                            <a href="/auth/login/"
+                                class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                                Login
+                            </a>
+                            <a href="/auth/signup/"
+                                class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg hover:shadow-md transition-all">
+                                Sign Up
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -431,6 +489,7 @@
     let conversationId = null;
     let isLoading = false;
     let currentStreamingMessage = null;
+    let currentUser = null;
 
     const chatForm = document.getElementById('chatForm');
     const promptInput = document.getElementById('promptInput');
@@ -440,6 +499,88 @@
     const loadingOverlay = document.getElementById('loadingOverlay');
     const modelSelect = document.getElementById('modelSelect');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+    // ===== Authentication Management =====
+    const authenticatedUser = document.getElementById('authenticatedUser');
+    const guestUser = document.getElementById('guestUser');
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Check authentication status
+    async function checkAuth() {
+        try {
+            const response = await fetch('/api/auth/api/me/', {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                currentUser = await response.json();
+                updateUserUI(currentUser);
+            } else {
+                showGuestUI();
+            }
+        } catch (error) {
+            console.error('Auth check error:', error);
+            showGuestUI();
+        }
+    }
+
+    // Update UI for authenticated user
+    function updateUserUI(user) {
+        authenticatedUser.classList.remove('hidden');
+        guestUser.classList.add('hidden');
+
+        // Set user initials
+        const initials = user.first_name && user.last_name
+            ? (user.first_name[0] + user.last_name[0]).toUpperCase()
+            : user.username.substring(0, 2).toUpperCase();
+        document.getElementById('userInitials').textContent = initials;
+
+        // Set user name
+        const displayName = user.full_name || user.username;
+        document.getElementById('userName').textContent = displayName;
+        document.getElementById('dropdownUserName').textContent = displayName;
+        document.getElementById('dropdownUserEmail').textContent = user.email;
+    }
+
+    // Show guest UI
+    function showGuestUI() {
+        authenticatedUser.classList.add('hidden');
+        guestUser.classList.remove('hidden');
+    }
+
+    // Toggle user dropdown
+    userMenuBtn?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!userDropdown.classList.contains('hidden') && !userMenuBtn?.contains(e.target)) {
+            userDropdown.classList.add('hidden');
+        }
+    });
+
+    // Handle logout
+    logoutBtn?.addEventListener('click', async function () {
+        try {
+            await fetch('/api/auth/api/logout/', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            window.location.href = '/auth/login/';
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force redirect anyway
+            window.location.href = '/auth/login/';
+        }
+    });
+
+    // Check auth on page load
+    checkAuth();
+
 
     // Auto-resize textarea
     promptInput.addEventListener('input', function () {
