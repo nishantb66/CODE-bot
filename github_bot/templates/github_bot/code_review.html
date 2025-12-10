@@ -6,30 +6,31 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
-    /* Elegant markdown styling */
+    /* Enhanced Markdown Styling */
     .markdown-body {
-        line-height: 1.7;
+        line-height: 1.75;
         color: #374151;
+        font-size: 0.9375rem;
     }
 
     .markdown-body ul {
         list-style-type: disc;
         padding-left: 1.5em;
-        margin: 0.75em 0;
+        margin: 0.875em 0;
     }
 
     .markdown-body ol {
         list-style-type: decimal;
         padding-left: 1.5em;
-        margin: 0.75em 0;
+        margin: 0.875em 0;
     }
 
     .markdown-body li {
-        margin: 0.35em 0;
+        margin: 0.375em 0;
     }
 
     .markdown-body p {
-        margin: 0.75em 0;
+        margin: 0.875em 0;
     }
 
     .markdown-body strong {
@@ -40,34 +41,37 @@
     .markdown-body code {
         background: #f1f5f9;
         color: #0f172a;
-        padding: 0.25em 0.5em;
+        padding: 0.2em 0.45em;
         border-radius: 0.375rem;
-        font-size: 0.9em;
+        font-size: 0.875em;
         font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
         font-weight: 500;
+        border: 1px solid #e2e8f0;
     }
 
     .markdown-body pre {
-        background: #1e293b;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: #e2e8f0;
-        padding: 1.25em;
-        border-radius: 0.75rem;
+        padding: 1.25rem;
+        border-radius: 0.875rem;
         overflow-x: auto;
-        margin: 1em 0;
+        margin: 1.25em 0;
         border: 1px solid #334155;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     .markdown-body pre code {
         background: transparent;
+        border: none;
         color: inherit;
         padding: 0;
         font-weight: 400;
     }
 
     .markdown-body h2 {
-        font-weight: 600;
+        font-weight: 700;
         font-size: 1.25em;
-        margin: 1.5em 0 0.75em;
+        margin: 1.75em 0 0.875em;
         color: #111827;
         border-bottom: 2px solid #e5e7eb;
         padding-bottom: 0.5em;
@@ -76,36 +80,41 @@
     .markdown-body h3 {
         font-weight: 600;
         font-size: 1.1em;
-        margin: 1.25em 0 0.5em;
+        margin: 1.375em 0 0.5em;
         color: #374151;
     }
 
-    /* Code editor */
+    /* Code Editor Styling */
     textarea.code-editor {
         font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
         font-size: 0.875rem;
         line-height: 1.6;
+        background: #fafbfc;
     }
 
-    /* Custom scrollbar for results */
+    textarea.code-editor:focus {
+        background: white;
+    }
+
+    /* Results Panel Scrollbar */
     #results-content::-webkit-scrollbar {
-        width: 6px;
+        width: 8px;
     }
 
     #results-content::-webkit-scrollbar-track {
-        background: #f1f5f9;
+        background: transparent;
     }
 
     #results-content::-webkit-scrollbar-thumb {
         background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
-        border-radius: 3px;
+        border-radius: 4px;
     }
 
-    /* Elegant animations */
-    @keyframes fadeIn {
+    /* Fade In Animation */
+    @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(15px);
+            transform: translateY(12px);
         }
 
         to {
@@ -115,33 +124,42 @@
     }
 
     .fade-in {
-        animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Tab Active State */
+    .tab-active {
+        position: relative;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- Elegant Header -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/60 sticky top-0 z-20">
-        <div class="max-w-7xl mx-auto px-4 py-4">
+<div class="min-h-screen flex flex-col bg-gradient-to-br from-neutral-50 via-white to-neutral-100">
+    <!-- Header -->
+    <header class="glass border-b border-neutral-200/60 sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5">
             <div class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <div
-                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-sm">
+                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-soft">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
                         </svg>
                     </div>
                     <div>
-                        <h1 class="text-lg font-semibold text-gray-900">Code Review</h1>
-                        <p class="text-xs text-gray-500 hidden sm:block">AI-Powered Code Analysis</p>
+                        <h1 class="text-lg font-semibold text-neutral-900">Code Review</h1>
+                        <p class="text-xs text-neutral-500 hidden sm:block">AI-Powered Code Analysis</p>
                     </div>
                 </div>
                 <a href="/"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
-                    ← Back to Chat
+                    class="btn-hover-lift px-4 py-2.5 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Chat
                 </a>
             </div>
         </div>
@@ -149,20 +167,39 @@
 
     <!-- Main Content -->
     <main class="flex-1 py-6">
-        <div class="max-w-7xl mx-auto px-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
             <!-- Tabs -->
             <div class="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                 <button onclick="switchTab('snippet')" id="tab-snippet"
-                    class="tab-active flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm transition-all bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-sm">
-                    Code Snippet
+                    class="tab-active flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm transition-all bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-soft">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        Code Snippet
+                    </span>
                 </button>
                 <button onclick="switchTab('file')" id="tab-file"
-                    class="flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 hover:bg-white/80 transition-all">
-                    GitHub File
+                    class="flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm text-neutral-600 hover:bg-white/80 hover:text-neutral-900 transition-all">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        GitHub File
+                    </span>
                 </button>
                 <button onclick="switchTab('improve')" id="tab-improve"
-                    class="flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm text-gray-700 hover:bg-white/80 transition-all">
-                    Improvements
+                    class="flex-shrink-0 px-5 py-2.5 rounded-xl font-medium text-sm text-neutral-600 hover:bg-white/80 hover:text-neutral-900 transition-all">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        Improvements
+                    </span>
                 </button>
             </div>
 
@@ -171,14 +208,17 @@
                 <div class="space-y-6">
                     <!-- Code Snippet Tab -->
                     <div id="panel-snippet" class="tab-panel">
-                        <div
-                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-6 space-y-5 shadow-sm">
-                            <h2 class="text-lg font-semibold text-gray-900">Review Code Snippet</h2>
+                        <div class="bg-white rounded-2xl border border-neutral-200/60 p-6 space-y-5 shadow-soft">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-neutral-900">Review Code Snippet</h2>
+                                <span class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-lg">Paste your
+                                    code</span>
+                            </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Language</label>
                                 <select id="snippet-language"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all">
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all bg-white cursor-pointer">
                                     <option value="python">Python</option>
                                     <option value="javascript">JavaScript</option>
                                     <option value="typescript">TypeScript</option>
@@ -190,21 +230,27 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Code</label>
                                 <textarea id="snippet-code" rows="12"
-                                    class="code-editor w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 resize-none transition-all"
+                                    class="code-editor w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-none transition-all"
                                     placeholder="Paste your code here..."></textarea>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Context (Optional)</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Context <span
+                                        class="text-neutral-400 font-normal">(Optional)</span></label>
                                 <input type="text" id="snippet-context"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
                                     placeholder="e.g., Function to process user data">
                             </div>
 
                             <button onclick="reviewSnippet()"
-                                class="w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md">
+                                class="btn-hover-lift w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-soft hover:shadow-medium flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                    </path>
+                                </svg>
                                 Review Code
                             </button>
                         </div>
@@ -212,41 +258,55 @@
 
                     <!-- GitHub File Tab -->
                     <div id="panel-file" class="tab-panel hidden">
-                        <div
-                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-6 space-y-5 shadow-sm">
-                            <h2 class="text-lg font-semibold text-gray-900">Review GitHub File</h2>
+                        <div class="bg-white rounded-2xl border border-neutral-200/60 p-6 space-y-5 shadow-soft">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-neutral-900">Review GitHub File</h2>
+                                <span class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-lg">From
+                                    repository</span>
+                            </div>
 
-                            <div class="bg-blue-50/80 border border-blue-200/60 rounded-xl p-3.5 text-sm text-blue-800">
-                                <p class="font-medium mb-1">💡 Tip</p>
-                                <p>Paste a full GitHub URL and we'll parse it automatically!</p>
+                            <div class="bg-accent-50 border border-accent-200 rounded-xl p-4 text-sm text-accent-800">
+                                <p class="font-medium mb-1 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    💡 Pro Tip
+                                </p>
+                                <p class="text-accent-700">Paste a full GitHub URL and we'll parse it automatically!</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Owner</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Owner</label>
                                 <input type="text" id="file-owner"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
                                     placeholder="e.g., octocat">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Repository</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Repository</label>
                                 <input type="text" id="file-repo"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
                                     placeholder="e.g., my-project">
-                                <p class="text-xs text-gray-500 mt-1.5">Use underscores or hyphens, not spaces</p>
+                                <p class="text-xs text-neutral-500 mt-1.5">Use underscores or hyphens, not spaces</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">File Path or URL</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">File Path or URL</label>
                                 <input type="text" id="file-path"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all"
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all"
                                     placeholder="e.g., src/main.py or paste GitHub URL"
                                     onpaste="handleGitHubUrlPaste(event)">
-                                <p class="text-xs text-gray-500 mt-1.5">File path from repository root</p>
+                                <p class="text-xs text-neutral-500 mt-1.5">File path from repository root</p>
                             </div>
 
                             <button onclick="reviewFile()"
-                                class="w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md">
+                                class="btn-hover-lift w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-soft hover:shadow-medium flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                                    </path>
+                                </svg>
                                 Review File
                             </button>
                         </div>
@@ -254,14 +314,17 @@
 
                     <!-- Improvements Tab -->
                     <div id="panel-improve" class="tab-panel hidden">
-                        <div
-                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-6 space-y-5 shadow-sm">
-                            <h2 class="text-lg font-semibold text-gray-900">Get Improvement Suggestions</h2>
+                        <div class="bg-white rounded-2xl border border-neutral-200/60 p-6 space-y-5 shadow-soft">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-semibold text-neutral-900">Get Improvement Suggestions</h2>
+                                <span
+                                    class="text-xs text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-lg">AI-powered</span>
+                            </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Language</label>
                                 <select id="improve-language"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all">
+                                    class="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-all bg-white cursor-pointer">
                                     <option value="python">Python</option>
                                     <option value="javascript">JavaScript</option>
                                     <option value="typescript">TypeScript</option>
@@ -271,40 +334,48 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Code</label>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Code</label>
                                 <textarea id="improve-code" rows="10"
-                                    class="code-editor w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 resize-none transition-all"
+                                    class="code-editor w-full px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-none transition-all"
                                     placeholder="Paste your code here..."></textarea>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Focus Areas</label>
-                                <div class="space-y-2.5">
-                                    <label class="flex items-center gap-2.5">
+                                <label class="block text-sm font-medium text-neutral-700 mb-3">Focus Areas</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label
+                                        class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors cursor-pointer">
                                         <input type="checkbox" value="performance"
-                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
-                                        <span class="text-sm">Performance</span>
+                                            class="focus-area rounded-md text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm text-neutral-700">⚡ Performance</span>
                                     </label>
-                                    <label class="flex items-center gap-2.5">
+                                    <label
+                                        class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors cursor-pointer">
                                         <input type="checkbox" value="readability"
-                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
-                                        <span class="text-sm">Readability</span>
+                                            class="focus-area rounded-md text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm text-neutral-700">📖 Readability</span>
                                     </label>
-                                    <label class="flex items-center gap-2.5">
+                                    <label
+                                        class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors cursor-pointer">
                                         <input type="checkbox" value="security"
-                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
-                                        <span class="text-sm">Security</span>
+                                            class="focus-area rounded-md text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm text-neutral-700">🔒 Security</span>
                                     </label>
-                                    <label class="flex items-center gap-2.5">
+                                    <label
+                                        class="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors cursor-pointer">
                                         <input type="checkbox" value="best-practices"
-                                            class="focus-area rounded text-primary-600 focus:ring-primary-500 w-4 h-4">
-                                        <span class="text-sm">Best Practices</span>
+                                            class="focus-area rounded-md text-primary-600 focus:ring-primary-500 w-4 h-4">
+                                        <span class="text-sm text-neutral-700">✨ Best Practices</span>
                                     </label>
                                 </div>
                             </div>
 
                             <button onclick="suggestImprovements()"
-                                class="w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-sm hover:shadow-md">
+                                class="btn-hover-lift w-full px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all shadow-soft hover:shadow-medium flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
                                 Get Suggestions
                             </button>
                         </div>
@@ -314,12 +385,12 @@
                 <!-- Results Panel -->
                 <div class="lg:sticky lg:top-24" style="max-height: calc(100vh - 120px);">
                     <div id="results-container"
-                        class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 overflow-hidden flex flex-col shadow-sm"
+                        class="bg-white rounded-2xl border border-neutral-200/60 overflow-hidden flex flex-col shadow-soft"
                         style="max-height: calc(100vh - 120px);">
                         <div id="results-content" class="overflow-y-auto p-6 flex-1">
-                            <div class="text-center py-16">
+                            <div class="text-center py-20">
                                 <div
-                                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-accent-100 rounded-3xl mb-6 shadow-sm">
+                                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100/80 to-accent-100/80 rounded-3xl mb-6 shadow-soft">
                                     <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -327,8 +398,9 @@
                                         </path>
                                     </svg>
                                 </div>
-                                <h3 class="text-lg font-semibold text-gray-900 mb-2">Ready to Review</h3>
-                                <p class="text-gray-600">Submit your code to get AI-powered feedback</p>
+                                <h3 class="text-lg font-semibold text-neutral-900 mb-2">Ready to Review</h3>
+                                <p class="text-neutral-500 max-w-xs mx-auto">Submit your code to get AI-powered feedback
+                                    and suggestions</p>
                             </div>
                         </div>
                     </div>
@@ -339,13 +411,13 @@
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay"
-        class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+        class="hidden fixed inset-0 bg-neutral-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-elevated">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
                 <div>
-                    <p class="font-semibold text-gray-900 text-lg">Analyzing...</p>
-                    <p class="text-sm text-gray-500">This may take a few seconds</p>
+                    <p class="font-semibold text-neutral-900 text-lg">Analyzing...</p>
+                    <p class="text-sm text-neutral-500 mt-0.5">This may take a few seconds</p>
                 </div>
             </div>
         </div>
@@ -357,12 +429,12 @@
 
     function switchTab(tab) {
         document.querySelectorAll('[id^="tab-"]').forEach(btn => {
-            btn.classList.remove('tab-active', 'bg-gradient-to-r', 'from-primary-500', 'to-accent-500', 'text-white', 'shadow-sm');
-            btn.classList.add('text-gray-700', 'hover:bg-white/80');
+            btn.classList.remove('tab-active', 'bg-gradient-to-r', 'from-primary-500', 'to-accent-500', 'text-white', 'shadow-soft');
+            btn.classList.add('text-neutral-600', 'hover:bg-white/80', 'hover:text-neutral-900');
         });
         const activeTab = document.getElementById(`tab-${tab}`);
-        activeTab.classList.add('tab-active', 'bg-gradient-to-r', 'from-primary-500', 'to-accent-500', 'text-white', 'shadow-sm');
-        activeTab.classList.remove('text-gray-700', 'hover:bg-white/80');
+        activeTab.classList.add('tab-active', 'bg-gradient-to-r', 'from-primary-500', 'to-accent-500', 'text-white', 'shadow-soft');
+        activeTab.classList.remove('text-neutral-600', 'hover:bg-white/80', 'hover:text-neutral-900');
 
         document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
         document.getElementById(`panel-${tab}`).classList.remove('hidden');
@@ -386,17 +458,23 @@
 
             container.innerHTML = `
                 <div class="fade-in">
-                    <div class="flex items-center justify-between mb-5 pb-4 border-b border-gray-200 sticky top-0 bg-white/80 backdrop-blur-sm z-10">
-                        <h3 class="font-semibold text-gray-900 text-lg">Review Results</h3>
-                        <span class="px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                            ✓ Complete
+                    <div class="flex items-center justify-between mb-5 pb-4 border-b border-neutral-200 sticky top-0 bg-white z-10">
+                        <h3 class="font-semibold text-neutral-900 text-lg">Review Results</h3>
+                        <span class="px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Complete
                         </span>
                     </div>
                     <div class="markdown-body">
                         ${sanitized}
                     </div>
                     ${data.metadata ? `
-                        <div class="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 sticky bottom-0 bg-white/80 backdrop-blur-sm">
+                        <div class="mt-6 pt-4 border-t border-neutral-200 text-xs text-neutral-500 flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                             Analyzed in ${data.metadata.duration_ms}ms
                         </div>
                     ` : ''}
@@ -411,8 +489,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-semibold text-gray-900 mb-2 text-lg">Error</h3>
-                    <p class="text-gray-600 text-sm">${data.error || 'An error occurred'}</p>
+                    <h3 class="font-semibold text-neutral-900 mb-2 text-lg">Error</h3>
+                    <p class="text-neutral-600 text-sm">${data.error || 'An error occurred'}</p>
                 </div>
             `;
         }
@@ -523,8 +601,10 @@
                     document.getElementById('file-owner').value = parsed.owner;
                     document.getElementById('file-repo').value = parsed.repo;
                     document.getElementById('file-path').value = parsed.path;
-                    event.target.classList.add('border-green-400');
-                    setTimeout(() => event.target.classList.remove('border-green-400'), 1000);
+                    event.target.classList.add('border-primary-400', 'bg-primary-50');
+                    setTimeout(() => {
+                        event.target.classList.remove('border-primary-400', 'bg-primary-50');
+                    }, 1000);
                 }
             }
         }, 10);

@@ -350,15 +350,32 @@ Be specific, technical, and insightful. Focus on actionable information."""
         # Repository Overview
         elements.append(Paragraph("<b>📊 Repository Overview</b>", heading_style))
         
+        # Safe get functions to handle None values
+        def safe_get(value, default='N/A', max_len=None):
+            """Safely get a value with optional length limit"""
+            if value is None:
+                return default
+            result = str(value)
+            if max_len and len(result) > max_len:
+                return result[:max_len] + '...'
+            return result
+        
+        def safe_get_nested(obj, key, nested_key, default='N/A'):
+            """Safely get nested dictionary value"""
+            nested = obj.get(key)
+            if nested is None or not isinstance(nested, dict):
+                return default
+            return nested.get(nested_key, default) or default
+        
         overview_data = [
-            ['Owner', repo.get('owner', {}).get('login', 'N/A')],
-            ['Full Name', repo.get('full_name', 'N/A')],
-            ['Description', repo.get('description', 'No description provided')[:100]],
+            ['Owner', safe_get_nested(repo, 'owner', 'login', 'N/A')],
+            ['Full Name', safe_get(repo.get('full_name'), 'N/A')],
+            ['Description', safe_get(repo.get('description'), 'No description provided', 100)],
             ['Created', datetime.strptime(repo.get('created_at', ''), '%Y-%m-%dT%H:%M:%SZ').strftime('%B %d, %Y') if repo.get('created_at') else 'N/A'],
             ['Last Updated', datetime.strptime(repo.get('updated_at', ''), '%Y-%m-%dT%H:%M:%SZ').strftime('%B %d, %Y') if repo.get('updated_at') else 'N/A'],
-            ['Default Branch', repo.get('default_branch', 'main')],
-            ['License', repo.get('license', {}).get('name', 'No license') if repo.get('license') else 'No license'],
-            ['Homepage', repo.get('homepage', 'None')[:50] if repo.get('homepage') else 'None'],
+            ['Default Branch', safe_get(repo.get('default_branch'), 'main')],
+            ['License', safe_get_nested(repo, 'license', 'name', 'No license')],
+            ['Homepage', safe_get(repo.get('homepage'), 'None', 50)],
         ]
         
         overview_table = Table(overview_data, colWidths=[2*inch, 4*inch])

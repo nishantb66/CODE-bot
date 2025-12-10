@@ -1,28 +1,34 @@
 """
 URL configuration for analyzer project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+This module defines the root URL patterns for the application.
+Routes are organized as follows:
+- /admin/ - Django admin interface
+- /api/auth/ - Authentication API endpoints
+- /auth/ - Authentication web pages
+- /sso/ - SSO callbacks
+- /api/ - GitHub Bot API endpoints
+- / - GitHub Bot web pages
 """
 from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
+    # Django Admin
     path('admin/', admin.site.urls),
-    path('api/auth/', include('authentication.urls')),  # Auth API endpoints
-    path('auth/', include('authentication.urls')),  # Auth web pages
-    path('sso/', include('authentication.urls')),  # SSO callbacks
-    path('api/', include('github_bot.urls')),
-    path('', include('github_bot.urls')),
+    
+    # Authentication - API endpoints (e.g., /api/auth/api/google/)
+    path('api/auth/', include(('authentication.urls', 'authentication'), namespace='auth_api')),
+    
+    # Authentication - Web pages (e.g., /auth/login/)
+    path('auth/', include(('authentication.urls', 'authentication'), namespace='auth_pages')),
+    
+    # Authentication - SSO callbacks (e.g., /sso/google/callback/)
+    path('sso/', include(('authentication.urls', 'authentication'), namespace='auth_sso')),
+    
+    # GitHub Bot - API endpoints (e.g., /api/chat/, /api/review-code/)
+    path('api/', include(('github_bot.urls', 'github_bot'), namespace='github_bot_api')),
+    
+    # GitHub Bot - Web pages (e.g., /, /code-review/)
+    path('', include(('github_bot.urls', 'github_bot'), namespace='github_bot_pages')),
 ]
-

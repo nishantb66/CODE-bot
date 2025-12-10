@@ -1,35 +1,36 @@
 {% extends "github_bot/base.html" %}
 
-{% block title %}GitHub Assistant{% endblock %}
+{% block title %}GitHub Assistant - AI Code Analysis{% endblock %}
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
-    /* Elegant markdown styling */
+    /* Enhanced Markdown Styling */
     .markdown-body {
-        line-height: 1.7;
+        line-height: 1.75;
         color: #374151;
+        font-size: 0.9375rem;
     }
 
     .markdown-body ul {
         list-style-type: disc;
         padding-left: 1.5em;
-        margin: 0.75em 0;
+        margin: 0.875em 0;
     }
 
     .markdown-body ol {
         list-style-type: decimal;
         padding-left: 1.5em;
-        margin: 0.75em 0;
+        margin: 0.875em 0;
     }
 
     .markdown-body li {
-        margin: 0.35em 0;
+        margin: 0.375em 0;
     }
 
     .markdown-body p {
-        margin: 0.75em 0;
+        margin: 0.875em 0;
     }
 
     .markdown-body strong {
@@ -40,39 +41,43 @@
     .markdown-body code {
         background: #f1f5f9;
         color: #0f172a;
-        padding: 0.25em 0.5em;
+        padding: 0.2em 0.45em;
         border-radius: 0.375rem;
-        font-size: 0.9em;
+        font-size: 0.875em;
         font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
         font-weight: 500;
+        border: 1px solid #e2e8f0;
     }
 
     .user-message .markdown-body code {
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
         color: white;
     }
 
     .markdown-body pre {
-        background: #1e293b;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: #e2e8f0;
-        padding: 1.25em;
-        border-radius: 0.75rem;
+        padding: 1.25rem;
+        border-radius: 0.875rem;
         overflow-x: auto;
-        margin: 1em 0;
+        margin: 1.25em 0;
         border: 1px solid #334155;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     .markdown-body pre code {
         background: transparent;
+        border: none;
         color: inherit;
         padding: 0;
         font-weight: 400;
     }
 
     .markdown-body h2 {
-        font-weight: 600;
+        font-weight: 700;
         font-size: 1.25em;
-        margin: 1.5em 0 0.75em;
+        margin: 1.75em 0 0.875em;
         color: #111827;
         border-bottom: 2px solid #e5e7eb;
         padding-bottom: 0.5em;
@@ -81,65 +86,51 @@
     .markdown-body h3 {
         font-weight: 600;
         font-size: 1.1em;
-        margin: 1.25em 0 0.5em;
+        margin: 1.375em 0 0.5em;
         color: #374151;
     }
 
-    /* Elegant message animations */
-    @keyframes slideUp {
+    .markdown-body a {
+        color: #0ea5e9;
+        text-decoration: none;
+    }
+
+    .markdown-body a:hover {
+        text-decoration: underline;
+    }
+
+    /* Message Animations */
+    @keyframes messageSlideUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(16px) scale(0.98);
         }
 
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
     }
 
     .message-enter {
-        animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* Typing cursor */
-    .typing-cursor {
-        display: inline-block;
-        width: 2px;
-        height: 1em;
-        background: #22c55e;
-        margin-left: 2px;
-        animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-
-        0%,
-        49% {
-            opacity: 1;
-        }
-
-        50%,
-        100% {
-            opacity: 0;
-        }
+        animation: messageSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     /* Typing Indicator */
     .typing-indicator {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 12px 16px;
+        gap: 5px;
+        padding: 14px 18px;
     }
 
     .typing-indicator span {
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #10b981;
+        background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
         animation: typingDot 1.4s infinite;
-        opacity: 0.4;
+        opacity: 0.5;
     }
 
     .typing-indicator span:nth-child(1) {
@@ -159,28 +150,50 @@
         0%,
         60%,
         100% {
-            opacity: 0.4;
+            opacity: 0.5;
             transform: scale(1);
         }
 
         30% {
             opacity: 1;
-            transform: scale(1.2);
+            transform: scale(1.15);
         }
+    }
+
+    /* Floating Input Glow */
+    .input-glow:focus {
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    /* User Menu Dropdown Animation */
+    @keyframes dropdownFade {
+        from {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .dropdown-enter {
+        animation: dropdownFade 0.2s ease-out;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-    <!-- Elegant Header -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-gray-200/60 sticky top-0 z-20">
-        <div class="max-w-5xl mx-auto px-4 py-4">
+<div class="flex flex-col h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100">
+    <!-- Header -->
+    <header class="glass border-b border-neutral-200/60 sticky top-0 z-20">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5">
             <div class="flex items-center justify-between gap-4">
                 <!-- Logo & Title -->
                 <div class="flex items-center gap-3">
                     <div
-                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-sm">
+                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-soft">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
@@ -188,16 +201,17 @@
                         </svg>
                     </div>
                     <div class="hidden sm:block">
-                        <h1 class="text-lg font-semibold text-gray-900">GitHub Assistant</h1>
-                        <p class="text-xs text-gray-500">AI-Powered Repository Analysis</p>
+                        <h1 class="text-lg font-semibold text-neutral-900">GitHub Assistant</h1>
+                        <p class="text-xs text-neutral-500">AI-Powered Repository Analysis</p>
                     </div>
-                    <h1 class="sm:hidden text-lg font-semibold text-gray-900">GitHub Assistant</h1>
+                    <h1 class="sm:hidden text-lg font-semibold text-neutral-900">GitHub Assistant</h1>
                 </div>
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
+                    <!-- Generate Report Button -->
                     <button id="generateReportBtn"
-                        class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:shadow-md transition-all flex items-center gap-1.5"
+                        class="btn-hover-lift px-3.5 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl hover:shadow-medium transition-all flex items-center gap-1.5"
                         title="Generate Repository Report">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -206,18 +220,24 @@
                         </svg>
                         <span class="hidden sm:inline">Report</span>
                     </button>
+
+                    <!-- Code Review Link -->
                     <a href="/code-review/"
-                        class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg hover:shadow-md transition-all">
+                        class="btn-hover-lift px-3.5 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl hover:shadow-medium transition-all">
                         <span class="hidden sm:inline">Code Review</span>
                         <span class="sm:hidden">Review</span>
                     </a>
+
+                    <!-- Model Selector -->
                     <select id="modelSelect"
-                        class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 bg-white transition-all">
+                        class="px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 bg-white transition-all cursor-pointer">
                         <option value="2">Llama 3.3 70B</option>
                         <option value="1">Llama 3.1 8B</option>
                     </select>
+
+                    <!-- Clear Button -->
                     <button id="clearHistoryBtn"
-                        class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
+                        class="p-2.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-xl transition-all"
                         title="Clear chat">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -231,13 +251,15 @@
                         <!-- Authenticated User -->
                         <div id="authenticatedUser" class="hidden">
                             <button id="userMenuBtn"
-                                class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
+                                class="flex items-center gap-2 p-1.5 hover:bg-neutral-100 rounded-xl transition-all">
                                 <div
-                                    class="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                                    class="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm shadow-soft">
                                     <span id="userInitials">U</span>
                                 </div>
-                                <span id="userName" class="hidden md:inline"></span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span id="userName"
+                                    class="hidden md:inline text-sm font-medium text-neutral-700"></span>
+                                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
@@ -245,41 +267,28 @@
 
                             <!-- Dropdown Menu -->
                             <div id="userDropdown"
-                                class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                                <div class="px-4 py-3 border-b border-gray-100">
-                                    <p class="text-sm font-medium text-gray-900" id="dropdownUserName"></p>
-                                    <p class="text-xs text-gray-500" id="dropdownUserEmail"></p>
+                                class="hidden dropdown-enter absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-elevated border border-neutral-100 py-2 z-50">
+                                <div class="px-4 py-3 border-b border-neutral-100">
+                                    <p class="text-sm font-semibold text-neutral-900" id="dropdownUserName"></p>
+                                    <p class="text-xs text-neutral-500 mt-0.5" id="dropdownUserEmail"></p>
                                 </div>
-                                <button id="changePasswordBtn"
-                                    class="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
-                                        </path>
-                                    </svg>
-                                    Change Password
-                                </button>
                                 <button id="logoutBtn"
-                                    class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
                                         </path>
                                     </svg>
-                                    Logout
+                                    Sign Out
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Guest User  -->
+                        <!-- Guest User -->
                         <div id="guestUser" class="flex items-center gap-2">
                             <a href="/auth/login/"
-                                class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all">
-                                Login
-                            </a>
-                            <a href="/auth/signup/"
-                                class="px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg hover:shadow-md transition-all">
-                                Sign Up
+                                class="px-3.5 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition-all">
+                                Sign In
                             </a>
                         </div>
                     </div>
@@ -290,34 +299,35 @@
 
     <!-- Messages Area -->
     <main class="flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto px-4 py-6" id="messagesContainer">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6" id="messagesContainer">
             <!-- Welcome Message -->
-            <div id="welcomeMessage" class="text-center py-16 sm:py-20">
+            <div id="welcomeMessage" class="text-center py-16 sm:py-24">
                 <div
-                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100 to-accent-100 rounded-3xl mb-6 shadow-sm">
+                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100/80 to-accent-100/80 rounded-3xl mb-8 shadow-soft">
                     <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
                         </path>
                     </svg>
                 </div>
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Welcome</h2>
-                <p class="text-gray-600 mb-10 max-w-md mx-auto text-lg">Ask me anything about your GitHub repositories
+                <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">Hello! 👋</h2>
+                <p class="text-neutral-600 mb-12 max-w-md mx-auto text-lg leading-relaxed">
+                    I'm your AI assistant for GitHub repositories. Ask me anything about your code.
                 </p>
 
                 <!-- Quick Actions -->
                 <div class="flex flex-wrap gap-3 justify-center max-w-2xl mx-auto">
                     <button
-                        class="suggestion-btn px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-sm hover:shadow">
-                        What repositories do I have?
+                        class="suggestion-btn group px-5 py-3 bg-white border border-neutral-200/80 rounded-2xl text-sm text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-soft hover:shadow-medium">
+                        <span class="group-hover:text-primary-600">What repositories do I have?</span>
                     </button>
                     <button
-                        class="suggestion-btn px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-sm hover:shadow">
-                        Show my most popular repo
+                        class="suggestion-btn group px-5 py-3 bg-white border border-neutral-200/80 rounded-2xl text-sm text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-soft hover:shadow-medium">
+                        <span class="group-hover:text-primary-600">Show my most popular repo</span>
                     </button>
                     <button
-                        class="suggestion-btn px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-sm hover:shadow">
-                        What languages do I use?
+                        class="suggestion-btn group px-5 py-3 bg-white border border-neutral-200/80 rounded-2xl text-sm text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-soft hover:shadow-medium">
+                        <span class="group-hover:text-primary-600">What languages do I use?</span>
                     </button>
                 </div>
             </div>
@@ -325,32 +335,33 @@
     </main>
 
     <!-- Input Area -->
-    <footer class="bg-white/80 backdrop-blur-md border-t border-gray-200/60 sticky bottom-0">
-        <div class="max-w-4xl mx-auto px-4 py-4">
+    <footer class="glass border-t border-neutral-200/60 sticky bottom-0">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4">
             <form id="chatForm" class="flex gap-3">
                 <textarea id="promptInput" rows="1" placeholder="Ask about your repositories..."
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 resize-none text-sm sm:text-base transition-all shadow-sm"
+                    class="flex-1 px-4 py-3.5 border border-neutral-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-none text-sm sm:text-base transition-all shadow-soft input-glow"
                     style="max-height: 120px;"></textarea>
                 <button type="submit" id="sendBtn"
-                    class="px-5 sm:px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md flex-shrink-0">
+                    class="btn-hover-lift px-5 sm:px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-2xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-medium flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
                 </button>
             </form>
+            <p class="text-xs text-neutral-400 text-center mt-3">Powered by Llama AI • Responses may be inaccurate</p>
         </div>
     </footer>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay"
-        class="hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
+        class="hidden fixed inset-0 bg-neutral-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-elevated">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
                 <div>
-                    <p class="font-semibold text-gray-900 text-lg">Processing...</p>
-                    <p class="text-sm text-gray-500">Analyzing repositories</p>
+                    <p class="font-semibold text-neutral-900 text-lg">Processing...</p>
+                    <p class="text-sm text-neutral-500 mt-0.5">Analyzing repositories</p>
                 </div>
             </div>
         </div>
@@ -358,12 +369,12 @@
 
     <!-- Report Generation Modal -->
     <div id="reportModal"
-        class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        class="hidden fixed inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-elevated max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+            <div class="bg-gradient-to-r from-violet-500 to-purple-500 px-6 py-5 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center">
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -372,10 +383,11 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-white">Generate Repository Report</h2>
-                        <p class="text-sm text-white/80">Create a comprehensive PDF report</p>
+                        <p class="text-sm text-white/80 mt-0.5">Create a comprehensive PDF analysis</p>
                     </div>
                 </div>
-                <button id="closeReportModal" class="text-white/80 hover:text-white transition-colors">
+                <button id="closeReportModal"
+                    class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
@@ -388,14 +400,14 @@
                 <!-- Input Section -->
                 <div id="reportInputSection">
                     <div class="mb-6">
-                        <label for="repoUrlInput" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="repoUrlInput" class="block text-sm font-medium text-neutral-700 mb-2">
                             Repository URL
                         </label>
                         <div class="flex gap-3">
                             <input type="url" id="repoUrlInput" placeholder="https://github.com/owner/repository"
-                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all">
+                                class="flex-1 px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all">
                             <button id="generateBtn"
-                                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                class="btn-hover-lift px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -403,22 +415,25 @@
                                 Generate
                             </button>
                         </div>
-                        <p class="mt-2 text-sm text-gray-500">
+                        <p class="mt-2 text-sm text-neutral-500">
                             Enter a public GitHub repository URL to generate a detailed analysis report
                         </p>
                     </div>
 
                     <!-- Examples -->
-                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100">
-                        <p class="text-sm font-medium text-gray-700 mb-2">📌 Example URLs:</p>
-                        <div class="space-y-1">
-                            <button class="example-url text-sm text-purple-600 hover:text-purple-700 block">
+                    <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-5 border border-violet-100">
+                        <p class="text-sm font-medium text-neutral-700 mb-3">📌 Example URLs:</p>
+                        <div class="space-y-2">
+                            <button
+                                class="example-url text-sm text-violet-600 hover:text-violet-700 block hover:underline">
                                 https://github.com/torvalds/linux
                             </button>
-                            <button class="example-url text-sm text-purple-600 hover:text-purple-700 block">
+                            <button
+                                class="example-url text-sm text-violet-600 hover:text-violet-700 block hover:underline">
                                 https://github.com/facebook/react
                             </button>
-                            <button class="example-url text-sm text-purple-600 hover:text-purple-700 block">
+                            <button
+                                class="example-url text-sm text-violet-600 hover:text-violet-700 block hover:underline">
                                 https://github.com/microsoft/vscode
                             </button>
                         </div>
@@ -426,23 +441,23 @@
                 </div>
 
                 <!-- Loading State -->
-                <div id="reportLoadingSection" class="hidden text-center py-12">
+                <div id="reportLoadingSection" class="hidden text-center py-16">
                     <div
-                        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-4">
-                        <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin">
+                        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-100 to-purple-100 rounded-full mb-5">
+                        <div class="w-12 h-12 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin">
                         </div>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">🤖 AI Analysis in Progress...</h3>
-                    <p class="text-sm text-gray-500">Analyzing repository with Llama 3.3 70B</p>
-                    <p class="text-xs text-gray-400 mt-2">This may take 10-20 seconds</p>
+                    <h3 class="text-lg font-semibold text-neutral-900 mb-2">🤖 AI Analysis in Progress</h3>
+                    <p class="text-sm text-neutral-500">Analyzing repository with Llama 3.3 70B</p>
+                    <p class="text-xs text-neutral-400 mt-2">This may take 10-20 seconds</p>
                 </div>
 
                 <!-- Preview Section -->
                 <div id="reportPreviewSection" class="hidden">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Report Preview</h3>
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg font-semibold text-neutral-900">Report Preview</h3>
                         <button id="downloadReportBtn"
-                            class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2">
+                            class="btn-hover-lift px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-medium transition-all flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
@@ -450,12 +465,12 @@
                             Download PDF
                         </button>
                     </div>
-                    <div class="bg-gray-100 rounded-lg p-2 border border-gray-200">
-                        <iframe id="pdfPreview" class="w-full h-[500px] bg-white rounded"></iframe>
+                    <div class="bg-neutral-100 rounded-2xl p-2 border border-neutral-200">
+                        <iframe id="pdfPreview" class="w-full h-[500px] bg-white rounded-xl"></iframe>
                     </div>
-                    <div class="mt-4 flex justify-center">
+                    <div class="mt-5 flex justify-center">
                         <button id="generateAnotherBtn"
-                            class="px-4 py-2 text-purple-600 hover:text-purple-700 font-medium transition-colors">
+                            class="px-4 py-2 text-violet-600 hover:text-violet-700 font-medium transition-colors hover:bg-violet-50 rounded-xl">
                             ← Generate Another Report
                         </button>
                     </div>
@@ -463,17 +478,17 @@
 
                 <!-- Error Section -->
                 <div id="reportErrorSection" class="hidden">
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-3">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+                        <div class="inline-flex items-center justify-center w-14 h-14 bg-red-100 rounded-full mb-4">
+                            <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                         <h3 class="text-lg font-semibold text-red-900 mb-2">Error Generating Report</h3>
-                        <p id="reportErrorMessage" class="text-sm text-red-700 mb-4"></p>
+                        <p id="reportErrorMessage" class="text-sm text-red-700 mb-5"></p>
                         <button id="tryAgainBtn"
-                            class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+                            class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors">
                             Try Again
                         </button>
                     </div>
@@ -534,11 +549,11 @@
         // Set user initials
         const initials = user.first_name && user.last_name
             ? (user.first_name[0] + user.last_name[0]).toUpperCase()
-            : user.username.substring(0, 2).toUpperCase();
+            : user.name ? user.name.substring(0, 2).toUpperCase() : user.email.substring(0, 2).toUpperCase();
         document.getElementById('userInitials').textContent = initials;
 
         // Set user name
-        const displayName = user.full_name || user.username;
+        const displayName = user.name || user.email.split('@')[0];
         document.getElementById('userName').textContent = displayName;
         document.getElementById('dropdownUserName').textContent = displayName;
         document.getElementById('dropdownUserEmail').textContent = user.email;
@@ -573,7 +588,6 @@
             window.location.href = '/auth/login/';
         } catch (error) {
             console.error('Logout error:', error);
-            // Force redirect anyway
             window.location.href = '/auth/login/';
         }
     });
@@ -614,8 +628,8 @@
 
         const bubble = document.createElement('div');
         bubble.className = `max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 text-sm sm:text-base markdown-body ${role === 'user'
-            ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white user-message shadow-md'
-            : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
+            ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white user-message shadow-medium'
+            : 'bg-white border border-neutral-200/80 text-neutral-900 shadow-soft'
             }`;
 
         if (isStreaming) {
@@ -642,14 +656,10 @@
             });
         };
 
-        // Initial instant scroll
         scrollToBottom(false);
-
-        // Smooth scroll after render
         requestAnimationFrame(() => {
             scrollToBottom(true);
             setTimeout(() => scrollToBottom(true), 50);
-            setTimeout(() => scrollToBottom(true), 150);
         });
 
         return bubble;
@@ -667,7 +677,6 @@
                 bubble.textContent = content;
             }
 
-            // Smooth auto-scroll as content streams in
             const scrollToBottom = (smooth = true) => {
                 messagesContainer.scrollTo({
                     top: messagesContainer.scrollHeight,
@@ -675,15 +684,8 @@
                 });
             };
 
-            // Immediate scroll
             scrollToBottom(false);
-
-            // Smooth scroll after render
-            requestAnimationFrame(() => {
-                scrollToBottom(true);
-                setTimeout(() => scrollToBottom(true), 10);
-                setTimeout(() => scrollToBottom(true), 50);
-            });
+            requestAnimationFrame(() => scrollToBottom(true));
         }
     }
 
@@ -705,7 +707,7 @@
         messageDiv.id = 'typing-indicator-wrapper';
 
         const bubble = document.createElement('div');
-        bubble.className = 'max-w-[85%] sm:max-w-[75%] rounded-2xl bg-white border border-gray-200 shadow-sm';
+        bubble.className = 'max-w-[85%] sm:max-w-[75%] rounded-2xl bg-white border border-neutral-200/80 shadow-soft';
 
         const typingIndicator = document.createElement('div');
         typingIndicator.className = 'typing-indicator';
@@ -715,7 +717,6 @@
         messageDiv.appendChild(bubble);
         messagesContainer.appendChild(messageDiv);
 
-        // Smooth scroll to show typing indicator
         const scrollToBottom = (smooth = true) => {
             messagesContainer.scrollTo({
                 top: messagesContainer.scrollHeight,
@@ -723,23 +724,14 @@
             });
         };
 
-        // Initial instant scroll
         scrollToBottom(false);
-
-        // Smooth scroll after render
-        requestAnimationFrame(() => {
-            scrollToBottom(true);
-            setTimeout(() => scrollToBottom(true), 50);
-            setTimeout(() => scrollToBottom(true), 150);
-        });
+        requestAnimationFrame(() => scrollToBottom(true));
     }
 
     // Hide typing indicator
     function hideTypingIndicator() {
         const indicator = document.getElementById('typing-indicator-wrapper');
-        if (indicator) {
-            indicator.remove();
-        }
+        if (indicator) indicator.remove();
     }
 
     // Handle form submission with streaming
@@ -753,8 +745,6 @@
         promptInput.value = '';
         promptInput.style.height = 'auto';
         setLoading(true);
-
-        // Show typing indicator instead of full-screen overlay
         showTypingIndicator();
 
         try {
@@ -767,32 +757,24 @@
                 requestBody.conversation_id = conversationId;
             }
 
-            // Use EventSource for Server-Sent Events
             const response = await fetch('/api/chat/stream/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
             });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
 
-            // Read the stream
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
             let fullResponse = '';
             let messageBubble = null;
 
-            // Hide typing indicator when stream starts
             hideTypingIndicator();
 
             while (true) {
                 const { done, value } = await reader.read();
-
                 if (done) break;
 
                 buffer += decoder.decode(value, { stream: true });
@@ -818,10 +800,7 @@
                                 addMessage(`⚠️ ${data.error}`, 'assistant');
                             }
                         } else if (data.done) {
-                            // Streaming complete
-                            if (messageBubble) {
-                                messageBubble.removeAttribute('id');
-                            }
+                            if (messageBubble) messageBubble.removeAttribute('id');
                         }
                     }
                 }
@@ -839,9 +818,7 @@
     // Clear history
     clearHistoryBtn.addEventListener('click', async function () {
         const hasMessages = messagesContainer.querySelectorAll('.message-enter').length > 0;
-
         if (!conversationId && !hasMessages) return;
-
         if (!confirm('Clear conversation history?')) return;
 
         try {
@@ -856,9 +833,7 @@
             if (currentConversationId) {
                 await fetch('/api/chat/', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         prompt: 'Clear history',
                         conversation_id: currentConversationId,
@@ -891,26 +866,18 @@
     let currentPdfData = null;
     let currentFilename = null;
 
-    // Open modal
     generateReportBtn.addEventListener('click', () => {
         reportModal.classList.remove('hidden');
         resetReportModal();
         repoUrlInput.focus();
     });
 
-    // Close modal
-    closeReportModal.addEventListener('click', () => {
-        reportModal.classList.add('hidden');
-    });
+    closeReportModal.addEventListener('click', () => reportModal.classList.add('hidden'));
 
-    // Close on backdrop click
     reportModal.addEventListener('click', (e) => {
-        if (e.target === reportModal) {
-            reportModal.classList.add('hidden');
-        }
+        if (e.target === reportModal) reportModal.classList.add('hidden');
     });
 
-    // Example URL clicks
     document.querySelectorAll('.example-url').forEach(btn => {
         btn.addEventListener('click', function () {
             repoUrlInput.value = this.textContent.trim();
@@ -918,14 +885,10 @@
         });
     });
 
-    // Enter key in input
     repoUrlInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            generateBtn.click();
-        }
+        if (e.key === 'Enter') generateBtn.click();
     });
 
-    // Generate report
     generateBtn.addEventListener('click', async () => {
         const repoUrl = repoUrlInput.value.trim();
 
@@ -939,7 +902,6 @@
             return;
         }
 
-        // Show loading
         reportInputSection.classList.add('hidden');
         reportErrorSection.classList.add('hidden');
         reportPreviewSection.classList.add('hidden');
@@ -948,23 +910,17 @@
         try {
             const response = await fetch('/api/generate-report/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ repo_url: repoUrl })
             });
 
             const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to generate report');
-            }
+            if (!response.ok) throw new Error(data.error || 'Failed to generate report');
 
-            // Store PDF data
             currentPdfData = data.pdf_base64;
             currentFilename = data.filename;
 
-            // Show preview
             const pdfDataUrl = `data:application/pdf;base64,${data.pdf_base64}`;
             pdfPreview.src = pdfDataUrl;
 
@@ -979,11 +935,9 @@
         }
     });
 
-    // Download report
     downloadReportBtn.addEventListener('click', () => {
         if (!currentPdfData || !currentFilename) return;
 
-        // Convert base64 to blob
         const byteCharacters = atob(currentPdfData);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
@@ -992,7 +946,6 @@
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'application/pdf' });
 
-        // Create download link
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1003,17 +956,9 @@
         document.body.removeChild(a);
     });
 
-    // Generate another report
-    generateAnotherBtn.addEventListener('click', () => {
-        resetReportModal();
-    });
+    generateAnotherBtn.addEventListener('click', () => resetReportModal());
+    tryAgainBtn.addEventListener('click', () => resetReportModal());
 
-    // Try again
-    tryAgainBtn.addEventListener('click', () => {
-        resetReportModal();
-    });
-
-    // Reset modal to initial state
     function resetReportModal() {
         reportInputSection.classList.remove('hidden');
         reportLoadingSection.classList.add('hidden');

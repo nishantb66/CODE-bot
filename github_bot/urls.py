@@ -1,33 +1,55 @@
+"""
+URL configuration for GitHub Bot API and web views.
+
+Routes are organized into:
+- Chat endpoints for AI conversation
+- Code review endpoints for code analysis
+- Report generation endpoints for PDF reports
+- Web views for HTML templates
+"""
+
 from django.urls import path
-from github_bot.views.chat_views import ChatAPIView
-from github_bot.views.chat_stream_views import ChatStreamView
-from github_bot.views.web_views import chat_view, code_review_view
-from github_bot.views.code_review_views import (
+from github_bot.views import (
+    # Chat
+    ChatAPIView,
+    ChatStreamView,
+    # Code Review
     CodeReviewAPIView,
     FileReviewAPIView,
-    ImprovementSuggestionsAPIView
+    ImprovementSuggestionsAPIView,
+    # Reports
+    generate_report,
+    download_report,
+    # Web
+    chat_view,
+    code_review_view,
 )
-from github_bot.views.report_views import generate_report, download_report
 
 app_name = 'github_bot'
 
 urlpatterns = [
-    # Chat endpoints
+    # ============================================
+    # Chat Endpoints
+    # ============================================
     path('chat/', ChatAPIView.as_view(), name='chat'),
     path('chat/stream/', ChatStreamView.as_view(), name='chat_stream'),
     
-    # Code review endpoints
+    # ============================================
+    # Code Review Endpoints
+    # ============================================
     path('review-code/', CodeReviewAPIView.as_view(), name='review_code'),
     path('review-file/', FileReviewAPIView.as_view(), name='review_file'),
     path('suggest-improvements/', ImprovementSuggestionsAPIView.as_view(), name='suggest_improvements'),
     
-    # Report generation endpoints
+    # ============================================
+    # Report Generation Endpoints
+    # ============================================
     path('generate-report/', generate_report, name='generate_report'),
     path('download-report/', download_report, name='download_report'),
     
-    # Web views
+    # ============================================
+    # Web Views (HTML Templates)
+    # ============================================
     path('code-review/', code_review_view, name='code_review_page'),
     path('', chat_view, name='home'),
 ]
-
-
