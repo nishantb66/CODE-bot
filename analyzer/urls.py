@@ -29,6 +29,13 @@ urlpatterns = [
     # GitHub Bot - API endpoints (e.g., /api/chat/, /api/review-code/)
     path('api/', include(('github_bot.urls', 'github_bot'), namespace='github_bot_api')),
     
+    # Security Scanner - API endpoints (e.g., /api/security/scan/)
+    path('api/security/', include(('security_scanner.urls', 'security_scanner'), namespace='security_scanner_api')),
+    
+    # Security Scanner - Web page (e.g., /security/)
+    path('security/', include(('security_scanner.web_urls', 'security_scanner'), namespace='security_scanner_pages')),
+    
     # GitHub Bot - Web pages (e.g., /, /code-review/)
     path('', include(('github_bot.urls', 'github_bot'), namespace='github_bot_pages')),
 ]
+

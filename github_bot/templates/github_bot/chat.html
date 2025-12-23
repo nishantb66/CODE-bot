@@ -6,23 +6,23 @@
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 <style>
-    /* Enhanced Markdown Styling */
+    /* Markdown Styling */
     .markdown-body {
-        line-height: 1.75;
-        color: #374151;
+        line-height: 1.7;
+        color: #334155;
         font-size: 0.9375rem;
     }
 
     .markdown-body ul {
         list-style-type: disc;
         padding-left: 1.5em;
-        margin: 0.875em 0;
+        margin: 0.75em 0;
     }
 
     .markdown-body ol {
         list-style-type: decimal;
         padding-left: 1.5em;
-        margin: 0.875em 0;
+        margin: 0.75em 0;
     }
 
     .markdown-body li {
@@ -30,68 +30,63 @@
     }
 
     .markdown-body p {
-        margin: 0.875em 0;
+        margin: 0.75em 0;
     }
 
     .markdown-body strong {
         font-weight: 600;
-        color: #111827;
+        color: #1e293b;
     }
 
     .markdown-body code {
         background: #f1f5f9;
-        color: #0f172a;
-        padding: 0.2em 0.45em;
-        border-radius: 0.375rem;
+        color: #1e293b;
+        padding: 0.2em 0.4em;
+        border-radius: 0.25rem;
         font-size: 0.875em;
         font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
         font-weight: 500;
-        border: 1px solid #e2e8f0;
     }
 
     .user-message .markdown-body code {
         background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
         color: white;
     }
 
     .markdown-body pre {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        background: #1e293b;
         color: #e2e8f0;
-        padding: 1.25rem;
-        border-radius: 0.875rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
         overflow-x: auto;
-        margin: 1.25em 0;
-        border: 1px solid #334155;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin: 1em 0;
     }
 
     .markdown-body pre code {
         background: transparent;
-        border: none;
         color: inherit;
         padding: 0;
         font-weight: 400;
     }
 
     .markdown-body h2 {
-        font-weight: 700;
-        font-size: 1.25em;
-        margin: 1.75em 0 0.875em;
-        color: #111827;
-        border-bottom: 2px solid #e5e7eb;
+        font-weight: 600;
+        font-size: 1.125em;
+        margin: 1.5em 0 0.75em;
+        color: #1e293b;
+        border-bottom: 1px solid #e2e8f0;
         padding-bottom: 0.5em;
     }
 
     .markdown-body h3 {
         font-weight: 600;
-        font-size: 1.1em;
-        margin: 1.375em 0 0.5em;
-        color: #374151;
+        font-size: 1em;
+        margin: 1.25em 0 0.5em;
+        color: #334155;
     }
 
     .markdown-body a {
-        color: #0ea5e9;
+        color: #2563eb;
         text-decoration: none;
     }
 
@@ -100,37 +95,128 @@
     }
 
     /* Message Animations */
-    @keyframes messageSlideUp {
+    @keyframes messageSlide {
         from {
             opacity: 0;
-            transform: translateY(16px) scale(0.98);
+            transform: translateY(12px);
         }
 
         to {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
         }
     }
 
     .message-enter {
-        animation: messageSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: messageSlide 0.25s ease-out;
     }
 
-    /* Typing Indicator */
+    /* AI Thinking Indicator */
+    .ai-thinking {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 20px;
+    }
+
+    .ai-thinking-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse-icon 2s ease-in-out infinite;
+    }
+
+    .ai-thinking-icon svg {
+        width: 18px;
+        height: 18px;
+        color: white;
+    }
+
+    @keyframes pulse-icon {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.7;
+            transform: scale(0.95);
+        }
+    }
+
+    .ai-thinking-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ai-thinking-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1e293b;
+    }
+
+    .ai-thinking-dots {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .ai-thinking-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #64748b;
+        animation: thinkingDot 1.4s infinite;
+    }
+
+    .ai-thinking-dots span:nth-child(1) {
+        animation-delay: 0s;
+    }
+
+    .ai-thinking-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .ai-thinking-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes thinkingDot {
+
+        0%,
+        60%,
+        100% {
+            opacity: 0.3;
+            transform: scale(1);
+        }
+
+        30% {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+    }
+
+    /* Legacy typing indicator for fallback */
     .typing-indicator {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        padding: 14px 18px;
+        gap: 4px;
+        padding: 12px 16px;
     }
 
     .typing-indicator span {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #22c55e 0%, #0ea5e9 100%);
+        background: #94a3b8;
         animation: typingDot 1.4s infinite;
-        opacity: 0.5;
     }
 
     .typing-indicator span:nth-child(1) {
@@ -150,94 +236,97 @@
         0%,
         60%,
         100% {
-            opacity: 0.5;
+            opacity: 0.4;
             transform: scale(1);
         }
 
         30% {
             opacity: 1;
-            transform: scale(1.15);
+            transform: scale(1.1);
         }
-    }
-
-    /* Floating Input Glow */
-    .input-glow:focus {
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    }
-
-    /* User Menu Dropdown Animation */
-    @keyframes dropdownFade {
-        from {
-            opacity: 0;
-            transform: translateY(-8px) scale(0.95);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    .dropdown-enter {
-        animation: dropdownFade 0.2s ease-out;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="flex flex-col h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100">
-    <!-- Header -->
-    <header class="glass border-b border-neutral-200/60 sticky top-0 z-20">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3.5">
+<div class="flex flex-col h-screen bg-brand-50">
+    <!-- Professional Header -->
+    <header class="bg-white border-b border-brand-200 sticky top-0 z-20">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3">
             <div class="flex items-center justify-between gap-4">
                 <!-- Logo & Title -->
                 <div class="flex items-center gap-3">
-                    <div
-                        class="w-11 h-11 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-soft">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-9 h-9 bg-brand-900 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
                             </path>
                         </svg>
                     </div>
                     <div class="hidden sm:block">
-                        <h1 class="text-lg font-semibold text-neutral-900">GitHub Assistant</h1>
-                        <p class="text-xs text-neutral-500">AI-Powered Repository Analysis</p>
+                        <h1 class="text-base font-semibold text-brand-900">GitHub Assistant</h1>
+                        <p class="text-xs text-brand-500">AI-Powered Analysis</p>
                     </div>
-                    <h1 class="sm:hidden text-lg font-semibold text-neutral-900">GitHub Assistant</h1>
+                    <h1 class="sm:hidden text-base font-semibold text-brand-900">GitHub Assistant</h1>
                 </div>
 
-                <!-- Actions -->
+                <!-- Right Actions -->
                 <div class="flex items-center gap-2">
-                    <!-- Generate Report Button -->
-                    <button id="generateReportBtn"
-                        class="btn-hover-lift px-3.5 py-2 text-sm font-medium text-white bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl hover:shadow-medium transition-all flex items-center gap-1.5"
-                        title="Generate Repository Report">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                            </path>
-                        </svg>
-                        <span class="hidden sm:inline">Report</span>
-                    </button>
+                    <!-- Navigation Dropdown -->
+                    <div class="relative" id="navDropdownContainer">
+                        <button id="navDropdownBtn"
+                            class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-700 hover:text-brand-900 hover:bg-brand-100 rounded-lg transition-colors">
+                            <span>Tools</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
 
-                    <!-- Code Review Link -->
-                    <a href="/code-review/"
-                        class="btn-hover-lift px-3.5 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 rounded-xl hover:shadow-medium transition-all">
-                        <span class="hidden sm:inline">Code Review</span>
-                        <span class="sm:hidden">Review</span>
-                    </a>
+                        <div id="navDropdown"
+                            class="hidden dropdown-menu absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-dropdown border border-brand-200 py-1 z-50">
+                            <a href="/code-review/"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-700 hover:bg-brand-50 transition-colors">
+                                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                </svg>
+                                Code Review
+                            </a>
+                            <a href="/security/"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-700 hover:bg-brand-50 transition-colors">
+                                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                    </path>
+                                </svg>
+                                Security Scanner
+                            </a>
+                            <button id="generateReportBtn"
+                                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-brand-700 hover:bg-brand-50 transition-colors">
+                                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
 
                     <!-- Model Selector -->
                     <select id="modelSelect"
-                        class="px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 bg-white transition-all cursor-pointer">
+                        class="hidden sm:block px-3 py-2 text-sm border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 bg-white transition-colors cursor-pointer">
                         <option value="2">Llama 3.3 70B</option>
                         <option value="1">Llama 3.1 8B</option>
                     </select>
 
                     <!-- Clear Button -->
                     <button id="clearHistoryBtn"
-                        class="p-2.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-xl transition-all"
+                        class="p-2 text-brand-400 hover:text-brand-600 hover:bg-brand-100 rounded-lg transition-colors"
                         title="Clear chat">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -248,29 +337,25 @@
 
                     <!-- User Menu -->
                     <div class="relative" id="userMenuContainer">
-                        <!-- Authenticated User -->
                         <div id="authenticatedUser" class="hidden">
                             <button id="userMenuBtn"
-                                class="flex items-center gap-2 p-1.5 hover:bg-neutral-100 rounded-xl transition-all">
+                                class="flex items-center gap-2 p-1 hover:bg-brand-100 rounded-lg transition-colors">
                                 <div
-                                    class="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm shadow-soft">
+                                    class="w-8 h-8 bg-brand-700 rounded-lg flex items-center justify-center text-white font-medium text-sm">
                                     <span id="userInitials">U</span>
                                 </div>
-                                <span id="userName"
-                                    class="hidden md:inline text-sm font-medium text-neutral-700"></span>
-                                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor"
+                                <svg class="w-4 h-4 text-brand-400 hidden sm:block" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </button>
 
-                            <!-- Dropdown Menu -->
                             <div id="userDropdown"
-                                class="hidden dropdown-enter absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-elevated border border-neutral-100 py-2 z-50">
-                                <div class="px-4 py-3 border-b border-neutral-100">
-                                    <p class="text-sm font-semibold text-neutral-900" id="dropdownUserName"></p>
-                                    <p class="text-xs text-neutral-500 mt-0.5" id="dropdownUserEmail"></p>
+                                class="hidden dropdown-menu absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-dropdown border border-brand-200 py-1 z-50">
+                                <div class="px-4 py-3 border-b border-brand-100">
+                                    <p class="text-sm font-medium text-brand-900" id="dropdownUserName"></p>
+                                    <p class="text-xs text-brand-500 mt-0.5" id="dropdownUserEmail"></p>
                                 </div>
                                 <button id="logoutBtn"
                                     class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
@@ -284,13 +369,8 @@
                             </div>
                         </div>
 
-                        <!-- Guest User -->
-                        <div id="guestUser" class="flex items-center gap-2">
-                            <a href="/auth/login/"
-                                class="px-3.5 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition-all">
-                                Sign In
-                            </a>
-                        </div>
+                        <!-- Guest User - Hidden since user is authenticated -->
+                        <div id="guestUser" class="hidden"></div>
                     </div>
                 </div>
             </div>
@@ -299,35 +379,34 @@
 
     <!-- Messages Area -->
     <main class="flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6" id="messagesContainer">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 py-6" id="messagesContainer">
             <!-- Welcome Message -->
-            <div id="welcomeMessage" class="text-center py-16 sm:py-24">
-                <div
-                    class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-100/80 to-accent-100/80 rounded-3xl mb-8 shadow-soft">
-                    <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div id="welcomeMessage" class="text-center py-16 sm:py-20">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-brand-100 rounded-xl mb-6">
+                    <svg class="w-8 h-8 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                             d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
                         </path>
                     </svg>
                 </div>
-                <h2 class="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">Hello! 👋</h2>
-                <p class="text-neutral-600 mb-12 max-w-md mx-auto text-lg leading-relaxed">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-brand-900 mb-3">Hello! 👋</h2>
+                <p class="text-brand-600 mb-10 max-w-md mx-auto">
                     I'm your AI assistant for GitHub repositories. Ask me anything about your code.
                 </p>
 
                 <!-- Quick Actions -->
-                <div class="flex flex-wrap gap-3 justify-center max-w-2xl mx-auto">
+                <div class="flex flex-wrap gap-2 justify-center max-w-xl mx-auto">
                     <button
-                        class="suggestion-btn group px-5 py-3 bg-white border border-neutral-200/80 rounded-2xl text-sm text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-soft hover:shadow-medium">
-                        <span class="group-hover:text-primary-600">What repositories do I have?</span>
+                        class="suggestion-btn px-4 py-2.5 bg-white border border-brand-200 rounded-lg text-sm text-brand-700 hover:border-brand-300 hover:bg-brand-50 transition-colors">
+                        What repositories do I have?
                     </button>
                     <button
-                        class="suggestion-btn group px-5 py-3 bg-white border border-neutral-200/80 rounded-2xl text-sm text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-soft hover:shadow-medium">
-                        <span class="group-hover:text-primary-600">Show my most popular repo</span>
+                        class="suggestion-btn px-4 py-2.5 bg-white border border-brand-200 rounded-lg text-sm text-brand-700 hover:border-brand-300 hover:bg-brand-50 transition-colors">
+                        Show my most popular repo
                     </button>
                     <button
-                        class="suggestion-btn group px-5 py-3 bg-white border border-neutral-200/80 rounded-2xl text-sm text-neutral-700 hover:border-primary-300 hover:bg-primary-50/50 hover:text-primary-700 transition-all shadow-soft hover:shadow-medium">
-                        <span class="group-hover:text-primary-600">What languages do I use?</span>
+                        class="suggestion-btn px-4 py-2.5 bg-white border border-brand-200 rounded-lg text-sm text-brand-700 hover:border-brand-300 hover:bg-brand-50 transition-colors">
+                        What languages do I use?
                     </button>
                 </div>
             </div>
@@ -335,33 +414,33 @@
     </main>
 
     <!-- Input Area -->
-    <footer class="glass border-t border-neutral-200/60 sticky bottom-0">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+    <footer class="bg-white border-t border-brand-200 sticky bottom-0">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 py-4">
             <form id="chatForm" class="flex gap-3">
                 <textarea id="promptInput" rows="1" placeholder="Ask about your repositories..."
-                    class="flex-1 px-4 py-3.5 border border-neutral-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-none text-sm sm:text-base transition-all shadow-soft input-glow"
+                    class="flex-1 px-4 py-3 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 resize-none text-sm transition-colors"
                     style="max-height: 120px;"></textarea>
                 <button type="submit" id="sendBtn"
-                    class="btn-hover-lift px-5 sm:px-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 text-white rounded-2xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-soft hover:shadow-medium flex-shrink-0">
+                    class="btn-hover px-5 py-3 bg-brand-900 hover:bg-brand-800 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                     </svg>
                 </button>
             </form>
-            <p class="text-xs text-neutral-400 text-center mt-3">Powered by Llama AI • Responses may be inaccurate</p>
+            <p class="text-xs text-brand-400 text-center mt-3">Powered by Llama AI • Responses may be inaccurate</p>
         </div>
     </footer>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay"
-        class="hidden fixed inset-0 bg-neutral-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-elevated">
+        class="hidden fixed inset-0 bg-brand-900/20 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-elevated">
             <div class="flex items-center gap-4">
-                <div class="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+                <div class="w-10 h-10 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
                 <div>
-                    <p class="font-semibold text-neutral-900 text-lg">Processing...</p>
-                    <p class="text-sm text-neutral-500 mt-0.5">Analyzing repositories</p>
+                    <p class="font-medium text-brand-900">Processing...</p>
+                    <p class="text-sm text-brand-500 mt-0.5">Analyzing repositories</p>
                 </div>
             </div>
         </div>
@@ -369,26 +448,26 @@
 
     <!-- Report Generation Modal -->
     <div id="reportModal"
-        class="hidden fixed inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-elevated max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        class="hidden fixed inset-0 bg-brand-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-elevated max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-violet-500 to-purple-500 px-6 py-5 flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-brand-900 px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                             </path>
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-xl font-bold text-white">Generate Repository Report</h2>
-                        <p class="text-sm text-white/80 mt-0.5">Create a comprehensive PDF analysis</p>
+                        <h2 class="text-lg font-semibold text-white">Generate Repository Report</h2>
+                        <p class="text-sm text-white/70">Create a comprehensive PDF analysis</p>
                     </div>
                 </div>
                 <button id="closeReportModal"
-                    class="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                         </path>
                     </svg>
@@ -400,14 +479,14 @@
                 <!-- Input Section -->
                 <div id="reportInputSection">
                     <div class="mb-6">
-                        <label for="repoUrlInput" class="block text-sm font-medium text-neutral-700 mb-2">
+                        <label for="repoUrlInput" class="block text-sm font-medium text-brand-700 mb-2">
                             Repository URL
                         </label>
                         <div class="flex gap-3">
                             <input type="url" id="repoUrlInput" placeholder="https://github.com/owner/repository"
-                                class="flex-1 px-4 py-3 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all">
+                                class="flex-1 px-4 py-3 border border-brand-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-500/20 focus:border-accent-500 transition-colors">
                             <button id="generateBtn"
-                                class="btn-hover-lift px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                                class="btn-hover px-6 py-3 bg-brand-900 text-white rounded-lg font-medium hover:bg-brand-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -415,25 +494,25 @@
                                 Generate
                             </button>
                         </div>
-                        <p class="mt-2 text-sm text-neutral-500">
+                        <p class="mt-2 text-sm text-brand-500">
                             Enter a public GitHub repository URL to generate a detailed analysis report
                         </p>
                     </div>
 
                     <!-- Examples -->
-                    <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-5 border border-violet-100">
-                        <p class="text-sm font-medium text-neutral-700 mb-3">📌 Example URLs:</p>
-                        <div class="space-y-2">
+                    <div class="bg-brand-50 rounded-lg p-4 border border-brand-100">
+                        <p class="text-sm font-medium text-brand-700 mb-2">Example URLs:</p>
+                        <div class="space-y-1">
                             <button
-                                class="example-url text-sm text-violet-600 hover:text-violet-700 block hover:underline">
+                                class="example-url text-sm text-accent-600 hover:text-accent-700 block hover:underline">
                                 https://github.com/torvalds/linux
                             </button>
                             <button
-                                class="example-url text-sm text-violet-600 hover:text-violet-700 block hover:underline">
+                                class="example-url text-sm text-accent-600 hover:text-accent-700 block hover:underline">
                                 https://github.com/facebook/react
                             </button>
                             <button
-                                class="example-url text-sm text-violet-600 hover:text-violet-700 block hover:underline">
+                                class="example-url text-sm text-accent-600 hover:text-accent-700 block hover:underline">
                                 https://github.com/microsoft/vscode
                             </button>
                         </div>
@@ -442,35 +521,34 @@
 
                 <!-- Loading State -->
                 <div id="reportLoadingSection" class="hidden text-center py-16">
-                    <div
-                        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-violet-100 to-purple-100 rounded-full mb-5">
-                        <div class="w-12 h-12 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-brand-100 rounded-full mb-4">
+                        <div class="w-10 h-10 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin">
                         </div>
                     </div>
-                    <h3 class="text-lg font-semibold text-neutral-900 mb-2">🤖 AI Analysis in Progress</h3>
-                    <p class="text-sm text-neutral-500">Analyzing repository with Llama 3.3 70B</p>
-                    <p class="text-xs text-neutral-400 mt-2">This may take 10-20 seconds</p>
+                    <h3 class="text-lg font-medium text-brand-900 mb-2">AI Analysis in Progress</h3>
+                    <p class="text-sm text-brand-500">Analyzing repository with Llama 3.3 70B</p>
+                    <p class="text-xs text-brand-400 mt-2">This may take 10-20 seconds</p>
                 </div>
 
                 <!-- Preview Section -->
                 <div id="reportPreviewSection" class="hidden">
-                    <div class="flex items-center justify-between mb-5">
-                        <h3 class="text-lg font-semibold text-neutral-900">Report Preview</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-brand-900">Report Preview</h3>
                         <button id="downloadReportBtn"
-                            class="btn-hover-lift px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl font-medium hover:shadow-medium transition-all flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="btn-hover px-4 py-2 bg-brand-900 text-white rounded-lg font-medium hover:bg-brand-800 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                             </svg>
                             Download PDF
                         </button>
                     </div>
-                    <div class="bg-neutral-100 rounded-2xl p-2 border border-neutral-200">
-                        <iframe id="pdfPreview" class="w-full h-[500px] bg-white rounded-xl"></iframe>
+                    <div class="bg-brand-100 rounded-lg p-2 border border-brand-200">
+                        <iframe id="pdfPreview" class="w-full h-[500px] bg-white rounded-lg"></iframe>
                     </div>
-                    <div class="mt-5 flex justify-center">
+                    <div class="mt-4 flex justify-center">
                         <button id="generateAnotherBtn"
-                            class="px-4 py-2 text-violet-600 hover:text-violet-700 font-medium transition-colors hover:bg-violet-50 rounded-xl">
+                            class="px-4 py-2 text-brand-600 hover:text-brand-700 font-medium transition-colors hover:bg-brand-50 rounded-lg">
                             ← Generate Another Report
                         </button>
                     </div>
@@ -478,17 +556,17 @@
 
                 <!-- Error Section -->
                 <div id="reportErrorSection" class="hidden">
-                    <div class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                        <div class="inline-flex items-center justify-center w-14 h-14 bg-red-100 rounded-full mb-4">
-                            <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-4">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <h3 class="text-lg font-semibold text-red-900 mb-2">Error Generating Report</h3>
-                        <p id="reportErrorMessage" class="text-sm text-red-700 mb-5"></p>
+                        <h3 class="text-lg font-medium text-red-900 mb-2">Error Generating Report</h3>
+                        <p id="reportErrorMessage" class="text-sm text-red-700 mb-4"></p>
                         <button id="tryAgainBtn"
-                            class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors">
+                            class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
                             Try Again
                         </button>
                     </div>
@@ -515,6 +593,21 @@
     const modelSelect = document.getElementById('modelSelect');
     const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
+    // ===== Navigation Dropdown =====
+    const navDropdownBtn = document.getElementById('navDropdownBtn');
+    const navDropdown = document.getElementById('navDropdown');
+
+    navDropdownBtn?.addEventListener('click', function (e) {
+        e.stopPropagation();
+        navDropdown.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!navDropdown.classList.contains('hidden') && !navDropdownBtn?.contains(e.target)) {
+            navDropdown.classList.add('hidden');
+        }
+    });
+
     // ===== Authentication Management =====
     const authenticatedUser = document.getElementById('authenticatedUser');
     const guestUser = document.getElementById('guestUser');
@@ -533,11 +626,12 @@
                 currentUser = await response.json();
                 updateUserUI(currentUser);
             } else {
-                showGuestUI();
+                // If not authenticated, redirect to login
+                window.location.href = '/auth/login/';
             }
         } catch (error) {
             console.error('Auth check error:', error);
-            showGuestUI();
+            window.location.href = '/auth/login/';
         }
     }
 
@@ -554,15 +648,8 @@
 
         // Set user name
         const displayName = user.name || user.email.split('@')[0];
-        document.getElementById('userName').textContent = displayName;
         document.getElementById('dropdownUserName').textContent = displayName;
         document.getElementById('dropdownUserEmail').textContent = user.email;
-    }
-
-    // Show guest UI
-    function showGuestUI() {
-        authenticatedUser.classList.add('hidden');
-        guestUser.classList.remove('hidden');
     }
 
     // Toggle user dropdown
@@ -624,12 +711,12 @@
         if (welcomeMessage) welcomeMessage.style.display = 'none';
 
         const messageDiv = document.createElement('div');
-        messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} mb-6 message-enter`;
+        messageDiv.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} mb-4 message-enter`;
 
         const bubble = document.createElement('div');
-        bubble.className = `max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 text-sm sm:text-base markdown-body ${role === 'user'
-            ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white user-message shadow-medium'
-            : 'bg-white border border-neutral-200/80 text-neutral-900 shadow-soft'
+        bubble.className = `max-w-[85%] sm:max-w-[75%] rounded-lg px-4 py-3 text-sm markdown-body ${role === 'user'
+            ? 'bg-brand-900 text-white user-message'
+            : 'bg-white border border-brand-200 text-brand-800'
             }`;
 
         if (isStreaming) {
@@ -698,22 +785,36 @@
         }
     }
 
-    // Show typing indicator
+    // Show AI thinking indicator
     function showTypingIndicator() {
         if (welcomeMessage) welcomeMessage.style.display = 'none';
 
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'flex justify-start mb-6 message-enter';
+        messageDiv.className = 'flex justify-start mb-4 message-enter';
         messageDiv.id = 'typing-indicator-wrapper';
 
         const bubble = document.createElement('div');
-        bubble.className = 'max-w-[85%] sm:max-w-[75%] rounded-2xl bg-white border border-neutral-200/80 shadow-soft';
+        bubble.className = 'max-w-[85%] sm:max-w-[75%] rounded-lg bg-white border border-brand-200 shadow-sm';
 
-        const typingIndicator = document.createElement('div');
-        typingIndicator.className = 'typing-indicator';
-        typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+        bubble.innerHTML = `
+            <div class="ai-thinking">
+                <div class="ai-thinking-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <div class="ai-thinking-content">
+                    <span class="ai-thinking-text">Thinking...</span>
+                    <div class="ai-thinking-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        `;
 
-        bubble.appendChild(typingIndicator);
         messageDiv.appendChild(bubble);
         messagesContainer.appendChild(messageDiv);
 

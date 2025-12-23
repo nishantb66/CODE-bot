@@ -1,0 +1,1731 @@
+{% extends "github_bot/base.html" %}
+
+{% block title %}Security Scanner - AI-Powered Vulnerability Detection{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<style>
+    /* Scanner-specific animations */
+    @keyframes scanner-pulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+
+        50% {
+            box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+        }
+    }
+
+    @keyframes scanner-line {
+        0% {
+            transform: translateY(0) scaleY(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: translateY(150px) scaleY(0.5);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: translateY(300px) scaleY(1);
+            opacity: 0;
+        }
+    }
+
+    @keyframes glow-line {
+        0% {
+            top: -10%;
+            opacity: 0;
+        }
+
+        10% {
+            opacity: 1;
+        }
+
+        90% {
+            opacity: 1;
+        }
+
+        100% {
+            top: 100%;
+            opacity: 0;
+        }
+    }
+
+    @keyframes fadeSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes countUp {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
+
+    @keyframes progressPulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    @keyframes scan-dots {
+
+        0%,
+        20% {
+            opacity: 0;
+        }
+
+        40% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+        }
+    }
+
+    .vuln-card-enter {
+        animation: fadeSlideUp 0.4s ease-out forwards;
+    }
+
+    .count-enter {
+        animation: countUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .scanning-shimmer {
+        background: linear-gradient(90deg,
+                rgba(239, 68, 68, 0.1) 25%,
+                rgba(239, 68, 68, 0.2) 50%,
+                rgba(239, 68, 68, 0.1) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    /* Severity badge colors - Professional solid colors */
+    .severity-critical {
+        background: #dc2626;
+    }
+
+    .severity-high {
+        background: #ea580c;
+    }
+
+    .severity-medium {
+        background: #d97706;
+    }
+
+    .severity-low {
+        background: #0284c7;
+    }
+
+    /* Card hover effects */
+    .vuln-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .vuln-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Progress bar animation */
+    .progress-animated::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 1.5s infinite;
+        background-size: 200% 100%;
+    }
+
+    /* Scanner visual */
+    .scanner-visual {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .scanner-visual::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #22c55e, transparent);
+        animation: glow-line 2s ease-in-out infinite;
+    }
+
+    /* Confidence indicator */
+    .confidence-high {
+        color: #22c55e;
+    }
+
+    .confidence-medium {
+        color: #d97706;
+    }
+
+    .confidence-low {
+        color: #64748b;
+    }
+
+    /* Code display */
+    .code-display {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+        font-size: 0.8125rem;
+    }
+
+    /* Tabs styling */
+    .tab-active {
+        background: #1e293b;
+        color: white;
+    }
+
+    /* Filter pills */
+    .filter-pill {
+        transition: all 0.2s ease;
+    }
+
+    .filter-pill:hover {
+        transform: scale(1.02);
+    }
+
+    .filter-pill.active {
+        background: #1e293b;
+        color: white;
+    }
+
+    /* Empty state illustration */
+    .empty-illustration {
+        opacity: 0.6;
+    }
+
+    /* Scan mode tabs */
+    .scan-tab {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid transparent;
+    }
+
+    .scan-tab:hover {
+        background: #e2e8f0;
+    }
+
+    .scan-tab.active {
+        background: #1e293b;
+        color: white;
+        border-color: transparent;
+    }
+
+    /* Code editor styling */
+    #codeInput {
+        scrollbar-width: thin;
+        scrollbar-color: #4ade80 #1e293b;
+    }
+
+    #codeInput::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #codeInput::-webkit-scrollbar-track {
+        background: #1e293b;
+        border-radius: 4px;
+    }
+
+    #codeInput::-webkit-scrollbar-thumb {
+        background: #4ade80;
+        border-radius: 4px;
+    }
+
+    /* Drop zone active */
+    .drop-zone-active {
+        border-color: #22c55e !important;
+        background: #f0fdf4 !important;
+    }
+
+    /* Risk level badges */
+    .risk-critical {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+
+    .risk-high {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    }
+
+    .risk-medium {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    }
+
+    .risk-low {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    }
+
+    .risk-safe {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+        .vuln-card {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-brand-50">
+    <!-- Professional Header -->
+    <header class="bg-white border-b border-brand-200 sticky top-0 z-20">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3">
+            <div class="flex items-center justify-between gap-4">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-brand-900 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="hidden sm:block">
+                        <h1 class="text-base font-semibold text-brand-900">Security Scanner</h1>
+                        <p class="text-xs text-brand-500">Vulnerability Detection</p>
+                    </div>
+                    <h1 class="sm:hidden text-base font-semibold text-brand-900">Security</h1>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex items-center gap-2">
+                    <!-- Navigation Dropdown -->
+                    <div class="relative" id="navDropdownContainer">
+                        <button id="navDropdownBtn"
+                            class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-brand-700 hover:text-brand-900 hover:bg-brand-100 rounded-lg transition-colors">
+                            <span>Navigate</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div id="navDropdown"
+                            class="hidden dropdown-menu absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-dropdown border border-brand-200 py-1 z-50">
+                            <a href="/"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-700 hover:bg-brand-50 transition-colors">
+                                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                                    </path>
+                                </svg>
+                                Chat
+                            </a>
+                            <a href="/code-review/"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm text-brand-700 hover:bg-brand-50 transition-colors">
+                                <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                </svg>
+                                Code Review
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- User Menu -->
+                    <div class="relative" id="userMenuContainer">
+                        <div id="authenticatedUser" class="hidden">
+                            <button id="userMenuBtn"
+                                class="flex items-center gap-2 p-1 hover:bg-brand-100 rounded-lg transition-colors">
+                                <div
+                                    class="w-8 h-8 bg-brand-700 rounded-lg flex items-center justify-center text-white font-medium text-sm">
+                                    <span id="userInitials">U</span>
+                                </div>
+                                <svg class="w-4 h-4 text-brand-400 hidden sm:block" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <div id="userDropdown"
+                                class="hidden dropdown-menu absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-dropdown border border-brand-200 py-1 z-50">
+                                <div class="px-4 py-3 border-b border-brand-100">
+                                    <p class="text-sm font-medium text-brand-900" id="dropdownUserName"></p>
+                                    <p class="text-xs text-brand-500 mt-0.5" id="dropdownUserEmail"></p>
+                                </div>
+                                <button id="logoutBtn"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                                        </path>
+                                    </svg>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Guest User - Hidden since auth is required -->
+                        <div id="guestUser" class="hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <!-- Hero Section with Input -->
+        <div class="text-center mb-10">
+            <div
+                class="inline-flex items-center gap-2 px-4 py-2 bg-brand-100 text-brand-700 rounded-full text-sm font-medium mb-6">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                    </path>
+                </svg>
+                <span>Security Analysis</span>
+            </div>
+
+            <h2 class="text-3xl sm:text-4xl font-bold text-brand-900 mb-4">
+                Scan Your Code for Vulnerabilities
+            </h2>
+
+            <p class="text-neutral-600 max-w-2xl mx-auto mb-8">
+                Analyze repositories, code files, or paste code directly for security analysis.
+                Get detailed findings with severity levels, risk assessment, and fix suggestions.
+            </p>
+
+            <!-- Scan Mode Tabs -->
+            <div class="max-w-3xl mx-auto">
+                <div class="flex justify-center gap-2 mb-6">
+                    <button id="repoTabBtn"
+                        class="scan-tab active px-6 py-3 text-sm font-semibold rounded-xl transition-all flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                        </svg>
+                        Repository Scan
+                    </button>
+                    <button id="codeTabBtn"
+                        class="scan-tab px-6 py-3 text-sm font-semibold rounded-xl transition-all flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        Code Scan
+                    </button>
+                </div>
+
+                <!-- Repository Scan Form -->
+                <div id="repoScanPanel" class="scan-panel">
+                    <form id="scanForm" class="relative">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1 relative">
+                                <div class="absolute left-4 top-1/2 -translate-y-1/2">
+                                    <svg class="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <input type="url" id="repoUrl" name="repository_url"
+                                    placeholder="https://github.com/owner/repository"
+                                    class="w-full pl-12 pr-4 py-4 text-base bg-white border-2 border-neutral-200 rounded-2xl focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all"
+                                    required>
+                            </div>
+                            <button type="submit" id="scanBtn"
+                                class="btn-hover px-8 py-4 text-base font-semibold text-white bg-brand-900 rounded-xl hover:bg-brand-800 transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                    </path>
+                                </svg>
+                                <span>Scan Repository</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Quick Examples -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-2">
+                        <span class="text-sm text-neutral-500">Try:</span>
+                        <button class="example-btn text-sm text-primary-600 hover:text-primary-700 hover:underline"
+                            data-url="https://github.com/OWASP/NodeGoat">
+                            OWASP/NodeGoat
+                        </button>
+                        <button class="example-btn text-sm text-primary-600 hover:text-primary-700 hover:underline"
+                            data-url="https://github.com/juice-shop/juice-shop">
+                            juice-shop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Code Scan Panel -->
+                <div id="codeScanPanel" class="scan-panel hidden">
+                    <div class="bg-white rounded-3xl border border-neutral-200 shadow-soft overflow-hidden">
+                        <!-- File Upload Section -->
+                        <div class="p-6 border-b border-neutral-100">
+                            <div class="flex flex-col sm:flex-row gap-4 items-center">
+                                <div class="flex-1">
+                                    <label
+                                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-neutral-300 border-dashed rounded-2xl cursor-pointer bg-neutral-50 hover:bg-neutral-100 transition-colors"
+                                        id="dropZone">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <svg class="w-8 h-8 mb-3 text-neutral-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                                </path>
+                                            </svg>
+                                            <p class="mb-2 text-sm text-neutral-500"><span class="font-semibold">Click
+                                                    to upload</span> or drag and drop</p>
+                                            <p class="text-xs text-neutral-400">Python, JavaScript, Java, Go, and more
+                                                (max 2MB)</p>
+                                        </div>
+                                        <input id="fileUpload" type="file" class="hidden"
+                                            accept=".py,.js,.jsx,.ts,.tsx,.java,.go,.rb,.php,.c,.cpp,.h,.rs,.swift,.kt,.scala,.json,.yaml,.yml,.xml,.toml,.sql,.sh,.env" />
+                                    </label>
+                                    <p id="selectedFileName"
+                                        class="hidden mt-2 text-sm text-primary-600 font-medium text-center"></p>
+                                </div>
+                                <div class="text-neutral-400 font-medium">OR</div>
+                                <div class="flex-1 flex flex-col gap-2">
+                                    <input type="text" id="codeFilename" placeholder="filename.py"
+                                        class="w-full px-4 py-3 text-sm bg-white border-2 border-neutral-200 rounded-xl focus:outline-none focus:border-primary-500 transition-all">
+                                    <p class="text-xs text-neutral-400 text-center">Enter filename with extension</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Code Editor -->
+                        <div class="p-6">
+                            <label class="block text-sm font-medium text-neutral-700 mb-2">Paste your code here:</label>
+                            <textarea id="codeInput" rows="12" placeholder="// Paste your code here for security analysis...
+// Supports: Python, JavaScript, TypeScript, Java, Go, Ruby, PHP, C/C++, Rust, and more
+
+function example() {
+    const password = 'hardcoded_secret'; // This would be flagged!
+    const query = 'SELECT * FROM users WHERE id = ' + userId; // SQL Injection!
+}" class="w-full px-4 py-3 font-mono text-sm bg-neutral-900 text-green-400 border-2 border-neutral-200 rounded-2xl focus:outline-none focus:border-primary-500 transition-all resize-none"></textarea>
+                        </div>
+
+                        <!-- Scan Button -->
+                        <div class="px-6 pb-6">
+                            <button id="codeScanBtn"
+                                class="w-full btn-hover px-8 py-4 text-base font-semibold text-white bg-brand-900 rounded-xl hover:bg-brand-800 transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                    </path>
+                                </svg>
+                                <span>Analyze Code</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Supported Languages -->
+                    <div class="mt-4 flex flex-wrap justify-center gap-2">
+                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-lg">Python</span>
+                        <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-lg">JavaScript</span>
+                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-lg">TypeScript</span>
+                        <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-lg">Java</span>
+                        <span class="text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded-lg">Go</span>
+                        <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-lg">Ruby</span>
+                        <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-lg">PHP</span>
+                        <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-lg">+ more</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scanning State -->
+        <div id="scanningState" class="hidden">
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white rounded-3xl border border-neutral-200 shadow-soft overflow-hidden">
+                    <!-- Scanner Visual -->
+                    <div class="scanner-visual h-2 bg-neutral-100 relative">
+                        <div id="scanProgress"
+                            class="absolute left-0 top-0 h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500 progress-animated"
+                            style="width: 0%"></div>
+                    </div>
+
+                    <div class="p-8 text-center">
+                        <div
+                            class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 rounded-2xl mb-6">
+                            <svg class="w-10 h-10 text-red-500 animate-pulse" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
+                            </svg>
+                        </div>
+
+                        <h3 class="text-xl font-semibold text-neutral-900 mb-2">Scanning Repository</h3>
+                        <p id="scanStatus" class="text-neutral-600 mb-6">Analyzing dependencies and source code...</p>
+
+                        <!-- Scan Steps -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                            <div id="step1" class="flex flex-col items-center gap-2 text-neutral-400">
+                                <div class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                    </svg>
+                                </div>
+                                <span>Fetching</span>
+                            </div>
+                            <div id="step2" class="flex flex-col items-center gap-2 text-neutral-400">
+                                <div class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <span>Dependencies</span>
+                            </div>
+                            <div id="step3" class="flex flex-col items-center gap-2 text-neutral-400">
+                                <div class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                    </svg>
+                                </div>
+                                <span>Source Code</span>
+                            </div>
+                            <div id="step4" class="flex flex-col items-center gap-2 text-neutral-400">
+                                <div class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <span>Configs</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Summary Cards -->
+            <div id="summaryCards" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- Critical -->
+                <div class="bg-white rounded-2xl border border-neutral-200 p-5 shadow-soft">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 rounded-xl severity-critical flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                </path>
+                            </svg>
+                        </div>
+                        <span class="text-3xl font-bold text-neutral-900 count-enter" id="criticalCount">0</span>
+                    </div>
+                    <p class="text-sm font-medium text-neutral-600">Critical</p>
+                </div>
+
+                <!-- High -->
+                <div class="bg-white rounded-2xl border border-neutral-200 p-5 shadow-soft">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 rounded-xl severity-high flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-3xl font-bold text-neutral-900 count-enter" id="highCount">0</span>
+                    </div>
+                    <p class="text-sm font-medium text-neutral-600">High</p>
+                </div>
+
+                <!-- Medium -->
+                <div class="bg-white rounded-2xl border border-neutral-200 p-5 shadow-soft">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 rounded-xl severity-medium flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-3xl font-bold text-neutral-900 count-enter" id="mediumCount">0</span>
+                    </div>
+                    <p class="text-sm font-medium text-neutral-600">Medium</p>
+                </div>
+
+                <!-- Low -->
+                <div class="bg-white rounded-2xl border border-neutral-200 p-5 shadow-soft">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-10 h-10 rounded-xl severity-low flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <span class="text-3xl font-bold text-neutral-900 count-enter" id="lowCount">0</span>
+                    </div>
+                    <p class="text-sm font-medium text-neutral-600">Low</p>
+                </div>
+            </div>
+
+            <!-- Scan Info Bar -->
+            <div id="scanInfoBar" class="bg-white rounded-2xl border border-neutral-200 p-4 mb-6 shadow-soft">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z">
+                                </path>
+                            </svg>
+                            <span class="text-sm text-neutral-600"><span id="filesScanned"
+                                    class="font-semibold text-neutral-900">0</span> files scanned</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-sm text-neutral-600"><span id="scanDuration"
+                                    class="font-semibold text-neutral-900">0</span>s</span>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex items-center gap-2">
+                        <button
+                            class="filter-pill active px-3 py-1.5 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700"
+                            data-filter="all">All</button>
+                        <button
+                            class="filter-pill px-3 py-1.5 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700"
+                            data-filter="critical">Critical</button>
+                        <button
+                            class="filter-pill px-3 py-1.5 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700"
+                            data-filter="high">High</button>
+                        <button
+                            class="filter-pill px-3 py-1.5 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700"
+                            data-filter="medium">Medium</button>
+                        <button
+                            class="filter-pill px-3 py-1.5 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700"
+                            data-filter="low">Low</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan Details Panel -->
+            <div id="scanDetailsPanel"
+                class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-5 mb-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h4 class="text-sm font-semibold text-blue-900">Scan Coverage</h4>
+                        </div>
+                        <p id="scanSummaryText" class="text-sm text-blue-700 mb-3"></p>
+
+                        <!-- Scanned Files Categories -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                                <span class="text-xs text-blue-700">Dependency files: <strong
+                                        id="depFilesCount">0</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                                <span class="text-xs text-blue-700">Config files: <strong
+                                        id="configFilesCount">0</strong></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <span class="text-xs text-blue-700">Source files: <strong
+                                        id="sourceFilesCount">0</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Dependency Files List -->
+                        <div id="depFilesList" class="hidden">
+                            <p class="text-xs font-medium text-blue-800 mb-1">Dependency files analyzed:</p>
+                            <div id="depFilesContent" class="flex flex-wrap gap-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Expand Files Button -->
+                    <button id="showFilesBtn"
+                        class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
+                        <span>View files</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Expandable Files List -->
+                <div id="filesListExpanded" class="hidden mt-4 pt-4 border-t border-blue-200">
+                    <div class="max-h-48 overflow-y-auto">
+                        <p class="text-xs font-medium text-blue-800 mb-2">Files analyzed in this scan:</p>
+                        <div id="filesListContent" class="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs"></div>
+                    </div>
+
+                    <!-- Scan More Button -->
+                    <div id="scanMoreSection" class="hidden mt-4 pt-4 border-t border-blue-200">
+                        <p class="text-sm text-blue-700 mb-2">
+                            <strong id="remainingFiles">0</strong> additional files can be analyzed.
+                        </p>
+                        <button id="scanMoreBtn"
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                            Scan More Files
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vulnerabilities List -->
+            <div id="vulnerabilitiesList" class="space-y-4">
+                <!-- Vulnerability cards will be inserted here -->
+            </div>
+
+            <!-- No Vulnerabilities Found -->
+            <div id="cleanState" class="hidden text-center py-12">
+                <div
+                    class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-3xl mb-6">
+                    <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-neutral-900 mb-2">All Clear!</h3>
+                <p class="text-neutral-600 max-w-md mx-auto">
+                    No security vulnerabilities were detected in the analyzed files. Check the scan details above to see
+                    what was analyzed.
+                </p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden">
+            <div class="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-2xl mb-4">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-red-900 mb-2">Scan Failed</h3>
+                <p id="errorMessage" class="text-red-700 mb-4">An error occurred while scanning the repository.</p>
+                <button onclick="location.reload()"
+                    class="px-6 py-2.5 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-xl transition-colors">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-neutral-200 mt-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-neutral-500">
+                    Powered by <span class="font-medium text-neutral-700">OSV.dev</span> vulnerability database
+                </p>
+                <div class="flex items-center gap-4">
+                    <a href="/" class="text-sm text-neutral-500 hover:text-neutral-700 transition-colors">Chat</a>
+                    <a href="/code-review/"
+                        class="text-sm text-neutral-500 hover:text-neutral-700 transition-colors">Code Review</a>
+                    <a href="/security/" class="text-sm text-primary-600 font-medium">Security Scanner</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<!-- Vulnerability Card Template -->
+<template id="vulnCardTemplate">
+    <div class="vuln-card bg-white rounded-2xl border border-neutral-200 shadow-soft overflow-hidden vuln-card-enter">
+        <div class="p-5 sm:p-6">
+            <!-- Header -->
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="severity-badge px-2.5 py-1 text-xs font-bold text-white rounded-lg uppercase tracking-wide"></span>
+                        <span class="confidence-badge text-xs font-medium"></span>
+                    </div>
+                    <h4 class="vuln-title text-lg font-semibold text-neutral-900 mb-1"></h4>
+                    <p class="vuln-type text-sm text-neutral-500"></p>
+                </div>
+                <button class="expand-btn p-2 hover:bg-neutral-100 rounded-xl transition-colors"
+                    aria-label="Expand details">
+                    <svg class="w-5 h-5 text-neutral-400 transition-transform" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- File Location -->
+            <div class="flex items-center gap-2 text-sm mb-4">
+                <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                <code class="file-path text-sm font-mono text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded"></code>
+                <span class="line-number text-neutral-500"></span>
+            </div>
+
+            <!-- Description -->
+            <p class="vuln-description text-sm text-neutral-600 mb-4"></p>
+
+            <!-- Expandable Details -->
+            <div class="vuln-details hidden">
+                <div class="border-t border-neutral-100 pt-4 mt-4 space-y-4">
+                    <!-- Impact -->
+                    <div>
+                        <h5 class="text-sm font-semibold text-neutral-900 mb-1 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Impact
+                        </h5>
+                        <p class="vuln-impact text-sm text-neutral-600"></p>
+                    </div>
+
+                    <!-- Root Cause -->
+                    <div>
+                        <h5 class="text-sm font-semibold text-neutral-900 mb-1 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                </path>
+                            </svg>
+                            Root Cause
+                        </h5>
+                        <p class="vuln-root-cause text-sm text-neutral-600"></p>
+                    </div>
+
+                    <!-- Suggested Fix -->
+                    <div>
+                        <h5 class="text-sm font-semibold text-neutral-900 mb-1 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Suggested Fix
+                        </h5>
+                        <p class="vuln-fix text-sm text-neutral-600"></p>
+                        <div
+                            class="suggested-version hidden mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                            </svg>
+                            <span>Upgrade to: <span class="version-text font-mono"></span></span>
+                        </div>
+                    </div>
+
+                    <!-- References -->
+                    <div class="vuln-references hidden">
+                        <h5 class="text-sm font-semibold text-neutral-900 mb-2 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+                                </path>
+                            </svg>
+                            References
+                        </h5>
+                        <div class="references-list flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- IDs -->
+                    <div class="vuln-ids flex flex-wrap gap-2">
+                        <span class="cve-id hidden px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-mono"></span>
+                        <span
+                            class="cwe-id hidden px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-mono"></span>
+                        <span class="scanner-name px-2 py-1 bg-neutral-100 text-neutral-600 rounded text-xs"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Elements
+        const scanForm = document.getElementById('scanForm');
+        const repoUrlInput = document.getElementById('repoUrl');
+        const scanBtn = document.getElementById('scanBtn');
+        const scanningState = document.getElementById('scanningState');
+        const resultsSection = document.getElementById('resultsSection');
+        const errorState = document.getElementById('errorState');
+        const cleanState = document.getElementById('cleanState');
+        const vulnerabilitiesList = document.getElementById('vulnerabilitiesList');
+        const vulnCardTemplate = document.getElementById('vulnCardTemplate');
+
+        // Code scan elements
+        const repoTabBtn = document.getElementById('repoTabBtn');
+        const codeTabBtn = document.getElementById('codeTabBtn');
+        const repoScanPanel = document.getElementById('repoScanPanel');
+        const codeScanPanel = document.getElementById('codeScanPanel');
+        const fileUpload = document.getElementById('fileUpload');
+        const codeInput = document.getElementById('codeInput');
+        const codeFilename = document.getElementById('codeFilename');
+        const codeScanBtn = document.getElementById('codeScanBtn');
+        const dropZone = document.getElementById('dropZone');
+        const selectedFileName = document.getElementById('selectedFileName');
+
+        // Progress elements
+        const scanProgress = document.getElementById('scanProgress');
+        const scanStatus = document.getElementById('scanStatus');
+        const steps = ['step1', 'step2', 'step3', 'step4'];
+
+        // Current filter
+        let currentFilter = 'all';
+        let allVulnerabilities = [];
+        let currentScanMode = 'repo'; // 'repo' or 'code'
+        let uploadedFile = null;
+
+        // Tab switching
+        repoTabBtn.addEventListener('click', function () {
+            currentScanMode = 'repo';
+            repoTabBtn.classList.add('active');
+            codeTabBtn.classList.remove('active');
+            repoScanPanel.classList.remove('hidden');
+            codeScanPanel.classList.add('hidden');
+        });
+
+        codeTabBtn.addEventListener('click', function () {
+            currentScanMode = 'code';
+            codeTabBtn.classList.add('active');
+            repoTabBtn.classList.remove('active');
+            codeScanPanel.classList.remove('hidden');
+            repoScanPanel.classList.add('hidden');
+        });
+
+        // File upload handling
+        fileUpload.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadedFile = file;
+                selectedFileName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                selectedFileName.classList.remove('hidden');
+                codeFilename.value = file.name;
+
+                // Read file content into textarea
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    codeInput.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Drag and drop
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            this.classList.add('drop-zone-active');
+        });
+
+        dropZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            this.classList.remove('drop-zone-active');
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            this.classList.remove('drop-zone-active');
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                uploadedFile = file;
+                selectedFileName.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                selectedFileName.classList.remove('hidden');
+                codeFilename.value = file.name;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    codeInput.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Code scan submission
+        codeScanBtn.addEventListener('click', async function () {
+            const code = codeInput.value.trim();
+            const filename = codeFilename.value.trim() || 'code.txt';
+
+            if (!code) {
+                alert('Please paste code or upload a file to scan.');
+                return;
+            }
+
+            // Reset states
+            errorState.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            scanningState.classList.remove('hidden');
+            codeScanBtn.disabled = true;
+            codeScanBtn.innerHTML = `
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Analyzing...</span>
+            `;
+
+            // Animate progress
+            animateScanProgress();
+
+            try {
+                const response = await fetch('/api/security/scan-code/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        filename: filename
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                scanningState.classList.add('hidden');
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Code scan failed');
+                }
+
+                // Display code scan results
+                displayCodeScanResults(data);
+
+            } catch (error) {
+                scanningState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = error.message;
+            } finally {
+                codeScanBtn.disabled = false;
+                codeScanBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                        </path>
+                    </svg>
+                    <span>Analyze Code</span>
+                `;
+            }
+        });
+
+        function displayCodeScanResults(data) {
+            // Store vulnerabilities
+            allVulnerabilities = [
+                ...data.vulnerabilities.critical.map(v => ({ ...v, severity: 'critical' })),
+                ...data.vulnerabilities.high.map(v => ({ ...v, severity: 'high' })),
+                ...data.vulnerabilities.medium.map(v => ({ ...v, severity: 'medium' })),
+                ...data.vulnerabilities.low.map(v => ({ ...v, severity: 'low' }))
+            ];
+
+            // Update summary counts
+            document.getElementById('criticalCount').textContent = data.summary.critical;
+            document.getElementById('highCount').textContent = data.summary.high;
+            document.getElementById('mediumCount').textContent = data.summary.medium;
+            document.getElementById('lowCount').textContent = data.summary.low;
+            document.getElementById('filesScanned').textContent = '1';
+            document.getElementById('scanDuration').textContent = (data.scan_duration_ms / 1000).toFixed(1);
+
+            // Update scan details panel with code scan info
+            const scanSummaryText = document.getElementById('scanSummaryText');
+            scanSummaryText.innerHTML = `
+                <strong>File:</strong> ${data.filename} (${data.language}) | 
+                <strong>Lines:</strong> ${data.total_lines} | 
+                <strong>Risk Level:</strong> <span class="px-2 py-1 text-white rounded-lg risk-${data.risk_assessment.level}">${data.risk_assessment.level.toUpperCase()}</span>
+            `;
+
+            // Show executive summary
+            const depFilesList = document.getElementById('depFilesList');
+            depFilesList.classList.remove('hidden');
+            document.querySelector('#depFilesList p').textContent = 'Executive Summary:';
+            const depFilesContent = document.getElementById('depFilesContent');
+            depFilesContent.innerHTML = `<span class="text-sm text-blue-700">${data.executive_summary}</span>`;
+
+            // Hide file counts for code scan
+            document.getElementById('depFilesCount').textContent = '0';
+            document.getElementById('configFilesCount').textContent = '0';
+            document.getElementById('sourceFilesCount').textContent = '1';
+
+            // Show recommendations in files list
+            const filesListContent = document.getElementById('filesListContent');
+            filesListContent.innerHTML = '';
+            if (data.recommendations && data.recommendations.length > 0) {
+                data.recommendations.forEach(rec => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2 bg-white rounded-lg border border-blue-100';
+                    item.innerHTML = `
+                        <span class="px-2 py-0.5 text-xs text-white rounded severity-${rec.priority}">${rec.priority}</span>
+                        <span class="text-sm text-blue-800 ml-2">${rec.title}</span>
+                        <span class="text-xs text-blue-500 ml-2">(${rec.affected_count} issues)</span>
+                    `;
+                    filesListContent.appendChild(item);
+                });
+            }
+
+            // Show results
+            resultsSection.classList.remove('hidden');
+            document.getElementById('scanDetailsPanel').classList.remove('hidden');
+
+            if (data.summary.total_vulnerabilities === 0) {
+                cleanState.classList.remove('hidden');
+                document.getElementById('scanInfoBar').classList.add('hidden');
+            } else {
+                cleanState.classList.add('hidden');
+                document.getElementById('scanInfoBar').classList.remove('hidden');
+                renderVulnerabilities();
+            }
+        }
+
+        // Example buttons
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                repoUrlInput.value = this.dataset.url;
+            });
+        });
+
+        // Filter buttons
+        document.querySelectorAll('.filter-pill').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderVulnerabilities();
+            });
+        });
+
+        // Scan More Files button
+        const scanMoreBtn = document.getElementById('scanMoreBtn');
+        if (scanMoreBtn) {
+            scanMoreBtn.addEventListener('click', async function () {
+                if (!window.currentRepoUrl || window.nextChunkStart === undefined) {
+                    alert('No scan in progress to continue.');
+                    return;
+                }
+
+                // Disable button during scan
+                this.disabled = true;
+                this.textContent = 'Scanning...';
+
+                // Show scanning state
+                scanningState.classList.remove('hidden');
+                animateScanProgress();
+
+                try {
+                    const response = await fetch('/api/security/scan/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            repository_url: window.currentRepoUrl,
+                            include_low_confidence: false,
+                            max_files: 500,
+                            chunk_start: window.nextChunkStart
+                        }),
+                        credentials: 'include'
+                    });
+
+                    const data = await response.json();
+                    scanningState.classList.add('hidden');
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || 'Scan failed');
+                    }
+
+                    // Merge new vulnerabilities with existing ones
+                    const newVulns = [
+                        ...data.critical.map(v => ({ ...v, severity: 'critical' })),
+                        ...data.high.map(v => ({ ...v, severity: 'high' })),
+                        ...data.medium.map(v => ({ ...v, severity: 'medium' })),
+                        ...data.low.map(v => ({ ...v, severity: 'low' }))
+                    ];
+
+                    allVulnerabilities.push(...newVulns);
+
+                    // Update summary counts
+                    const bySeverity = {
+                        critical: allVulnerabilities.filter(v => v.severity === 'critical'),
+                        high: allVulnerabilities.filter(v => v.severity === 'high'),
+                        medium: allVulnerabilities.filter(v => v.severity === 'medium'),
+                        low: allVulnerabilities.filter(v => v.severity === 'low')
+                    };
+
+                    document.getElementById('criticalCount').textContent = bySeverity.critical.length;
+                    document.getElementById('highCount').textContent = bySeverity.high.length;
+                    document.getElementById('mediumCount').textContent = bySeverity.medium.length;
+                    document.getElementById('lowCount').textContent = bySeverity.low.length;
+
+                    // Update files scanned count
+                    const totalFilesScanned = parseInt(document.getElementById('filesScanned').textContent) + data.files_scanned;
+                    document.getElementById('filesScanned').textContent = totalFilesScanned;
+
+                    // Update scan details
+                    const scanDetails = data.metadata?.scan_details || {};
+                    if (scanDetails.has_more_files) {
+                        window.nextChunkStart = scanDetails.next_chunk_start;
+                        const remaining = scanDetails.total_files_in_repo - scanDetails.files_scanned_count;
+                        document.getElementById('remainingFiles').textContent = remaining;
+                    } else {
+                        // No more files to scan
+                        document.getElementById('scanMoreSection').classList.add('hidden');
+                    }
+
+                    // Append new files to the list
+                    const filesListContent = document.getElementById('filesListContent');
+                    const newFiles = scanDetails.files_analyzed || [];
+                    newFiles.forEach(file => {
+                        const item = document.createElement('div');
+                        item.className = 'text-blue-600 font-mono truncate';
+                        item.textContent = file;
+                        item.title = file;
+                        filesListContent.appendChild(item);
+                    });
+
+                    // Re-render vulnerabilities to show new findings
+                    renderVulnerabilities();
+
+                    // Show notification
+                    alert(`Scanned ${data.files_scanned} additional files. Found ${newVulns.length} new vulnerabilities.`);
+
+                } catch (error) {
+                    scanningState.classList.add('hidden');
+                    alert('Error scanning more files: ' + error.message);
+                } finally {
+                    this.disabled = false;
+                    this.textContent = 'Scan More Files';
+                }
+            });
+        }
+
+        // Form submission
+        scanForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const repoUrl = repoUrlInput.value.trim();
+            if (!repoUrl) return;
+
+            // Store current repo URL for "Scan More" functionality
+            window.currentRepoUrl = repoUrl;
+
+            // Reset states
+            errorState.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            scanningState.classList.remove('hidden');
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Scanning...</span>
+        `;
+
+            // Animate progress
+            animateScanProgress();
+
+            try {
+                const response = await fetch('/api/security/scan/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        repository_url: repoUrl,
+                        include_low_confidence: false,
+                        max_files: 500
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                scanningState.classList.add('hidden');
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Scan failed');
+                }
+
+                // Store all vulnerabilities
+                allVulnerabilities = [
+                    ...data.critical.map(v => ({ ...v, severity: 'critical' })),
+                    ...data.high.map(v => ({ ...v, severity: 'high' })),
+                    ...data.medium.map(v => ({ ...v, severity: 'medium' })),
+                    ...data.low.map(v => ({ ...v, severity: 'low' }))
+                ];
+
+                // Update summary
+                document.getElementById('criticalCount').textContent = data.summary.critical;
+                document.getElementById('highCount').textContent = data.summary.high;
+                document.getElementById('mediumCount').textContent = data.summary.medium;
+                document.getElementById('lowCount').textContent = data.summary.low;
+                document.getElementById('filesScanned').textContent = data.files_scanned;
+                document.getElementById('scanDuration').textContent = (data.scan_duration_ms / 1000).toFixed(1);
+
+                // Populate scan details panel
+                const scanDetails = data.metadata?.scan_details || {};
+                const coverage = data.metadata?.coverage || {};
+
+                // Summary text
+                const summaryText = data.metadata?.scan_summary || `Analyzed ${data.files_scanned} files`;
+                document.getElementById('scanSummaryText').textContent = summaryText;
+
+                // File counts
+                document.getElementById('depFilesCount').textContent = coverage.dependency_files_count || 0;
+                document.getElementById('configFilesCount').textContent = coverage.config_files_count || 0;
+                document.getElementById('sourceFilesCount').textContent = coverage.source_files_count || 0;
+
+                // Dependency files list
+                const depFiles = scanDetails.dependency_files_found || [];
+                if (depFiles.length > 0) {
+                    document.getElementById('depFilesList').classList.remove('hidden');
+                    const depFilesContent = document.getElementById('depFilesContent');
+                    depFilesContent.innerHTML = '';
+                    depFiles.forEach(file => {
+                        const badge = document.createElement('span');
+                        badge.className = 'px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-mono';
+                        badge.textContent = file;
+                        depFilesContent.appendChild(badge);
+                    });
+                }
+
+                // All files list
+                const allFilesScanned = scanDetails.files_analyzed || [];
+                const filesListContent = document.getElementById('filesListContent');
+                filesListContent.innerHTML = '';
+                allFilesScanned.forEach(file => {
+                    const item = document.createElement('div');
+                    item.className = 'text-blue-600 font-mono truncate';
+                    item.textContent = file;
+                    item.title = file;
+                    filesListContent.appendChild(item);
+                });
+
+                // Scan more section
+                if (scanDetails.has_more_files) {
+                    const remaining = scanDetails.total_files_in_repo - scanDetails.files_scanned_count;
+                    document.getElementById('scanMoreSection').classList.remove('hidden');
+                    document.getElementById('remainingFiles').textContent = remaining;
+                    // Store next chunk start for scan more
+                    window.nextChunkStart = scanDetails.next_chunk_start || 0;
+                }
+
+                // Show files button handler
+                document.getElementById('showFilesBtn').onclick = function () {
+                    const expanded = document.getElementById('filesListExpanded');
+                    expanded.classList.toggle('hidden');
+                    this.querySelector('svg').style.transform = expanded.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+                };
+
+                // Show results
+                resultsSection.classList.remove('hidden');
+
+                if (data.total_vulnerabilities === 0) {
+                    cleanState.classList.remove('hidden');
+                    document.getElementById('scanInfoBar').classList.add('hidden');
+                } else {
+                    cleanState.classList.add('hidden');
+                    document.getElementById('scanInfoBar').classList.remove('hidden');
+                    renderVulnerabilities();
+                }
+
+            } catch (error) {
+                scanningState.classList.add('hidden');
+                errorState.classList.remove('hidden');
+                document.getElementById('errorMessage').textContent = error.message;
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                    </path>
+                </svg>
+                <span>Scan Repository</span>
+            `;
+            }
+        });
+
+        function animateScanProgress() {
+            let progress = 0;
+            const statusMessages = [
+                'Connecting to GitHub...',
+                'Fetching repository files...',
+                'Analyzing dependencies...',
+                'Scanning source code patterns...',
+                'Checking configurations...',
+                'Detecting secrets...',
+                'Compiling results...'
+            ];
+            let messageIndex = 0;
+
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+
+                scanProgress.style.width = `${progress}%`;
+
+                // Update step indicators
+                if (progress > 20) activateStep('step1');
+                if (progress > 40) activateStep('step2');
+                if (progress > 60) activateStep('step3');
+                if (progress > 80) activateStep('step4');
+
+                // Update status message
+                if (progress > messageIndex * 15 && messageIndex < statusMessages.length) {
+                    scanStatus.textContent = statusMessages[messageIndex];
+                    messageIndex++;
+                }
+            }, 500);
+
+            // Store interval to clear later
+            window.scanInterval = interval;
+        }
+
+        function activateStep(stepId) {
+            const step = document.getElementById(stepId);
+            step.classList.remove('text-neutral-400');
+            step.classList.add('text-primary-600');
+            step.querySelector('div').classList.remove('bg-neutral-100');
+            step.querySelector('div').classList.add('bg-primary-100');
+        }
+
+        function renderVulnerabilities() {
+            vulnerabilitiesList.innerHTML = '';
+
+            let filtered = allVulnerabilities;
+            if (currentFilter !== 'all') {
+                filtered = allVulnerabilities.filter(v => v.severity === currentFilter);
+            }
+
+            filtered.forEach((vuln, index) => {
+                const card = createVulnCard(vuln);
+                card.style.animationDelay = `${index * 0.05}s`;
+                vulnerabilitiesList.appendChild(card);
+            });
+        }
+
+        function createVulnCard(vuln) {
+            const template = vulnCardTemplate.content.cloneNode(true);
+            const card = template.querySelector('.vuln-card');
+
+            // Severity badge
+            const severityBadge = card.querySelector('.severity-badge');
+            severityBadge.textContent = vuln.severity;
+            severityBadge.classList.add(`severity-${vuln.severity}`);
+
+            // Confidence badge
+            const confidenceBadge = card.querySelector('.confidence-badge');
+            confidenceBadge.textContent = `${vuln.confidence} confidence`;
+            confidenceBadge.classList.add(`confidence-${vuln.confidence}`);
+
+            // Title and type
+            card.querySelector('.vuln-title').textContent = vuln.title;
+            card.querySelector('.vuln-type').textContent = vuln.vulnerability_type.replace(/_/g, ' ');
+
+            // File path
+            card.querySelector('.file-path').textContent = vuln.file_path;
+            if (vuln.line) {
+                card.querySelector('.line-number').textContent = `Line ${vuln.line}`;
+            }
+
+            // Description
+            card.querySelector('.vuln-description').textContent = vuln.description;
+
+            // Details
+            card.querySelector('.vuln-impact').textContent = vuln.impact;
+            card.querySelector('.vuln-root-cause').textContent = vuln.root_cause;
+            card.querySelector('.vuln-fix').textContent = vuln.suggested_fix;
+
+            // Suggested version
+            if (vuln.suggested_version) {
+                const suggestedVersion = card.querySelector('.suggested-version');
+                suggestedVersion.classList.remove('hidden');
+                suggestedVersion.querySelector('.version-text').textContent = vuln.suggested_version;
+            }
+
+            // References
+            if (vuln.references && vuln.references.length > 0) {
+                const refsContainer = card.querySelector('.vuln-references');
+                refsContainer.classList.remove('hidden');
+                const refsList = refsContainer.querySelector('.references-list');
+                vuln.references.slice(0, 3).forEach(ref => {
+                    const link = document.createElement('a');
+                    link.href = ref;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.className = 'text-xs text-blue-600 hover:text-blue-700 hover:underline truncate max-w-xs';
+                    link.textContent = new URL(ref).hostname;
+                    refsList.appendChild(link);
+                });
+            }
+
+            // IDs
+            if (vuln.cve_id) {
+                const cveEl = card.querySelector('.cve-id');
+                cveEl.classList.remove('hidden');
+                cveEl.textContent = vuln.cve_id;
+            }
+            if (vuln.cwe_id) {
+                const cweEl = card.querySelector('.cwe-id');
+                cweEl.classList.remove('hidden');
+                cweEl.textContent = vuln.cwe_id;
+            }
+            card.querySelector('.scanner-name').textContent = `Scanner: ${vuln.scanner}`;
+
+            // Expand/collapse functionality
+            const expandBtn = card.querySelector('.expand-btn');
+            const details = card.querySelector('.vuln-details');
+            expandBtn.addEventListener('click', function () {
+                const isExpanded = !details.classList.contains('hidden');
+                details.classList.toggle('hidden');
+                this.querySelector('svg').style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+
+            return card;
+        }
+
+        // Navigation dropdown
+        const navDropdownBtn = document.getElementById('navDropdownBtn');
+        const navDropdown = document.getElementById('navDropdown');
+
+        navDropdownBtn?.addEventListener('click', function (e) {
+            e.stopPropagation();
+            navDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!navDropdown.classList.contains('hidden') && !navDropdownBtn?.contains(e.target)) {
+                navDropdown.classList.add('hidden');
+            }
+        });
+
+        // User authentication handling
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/api/me/', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showAuthenticatedUser(data);
+                } else {
+                    window.location.href = '/auth/login/';
+                }
+            } catch (error) {
+                window.location.href = '/auth/login/';
+            }
+        }
+
+        function showAuthenticatedUser(user) {
+            const guestUser = document.getElementById('guestUser');
+            const authenticatedUser = document.getElementById('authenticatedUser');
+
+            if (guestUser) guestUser.classList.add('hidden');
+            if (authenticatedUser) authenticatedUser.classList.remove('hidden');
+
+            const initials = (user.first_name?.[0] || '') + (user.last_name?.[0] || user.email?.[0] || 'U');
+
+            const userInitialsEl = document.getElementById('userInitials');
+            const userNameEl = document.getElementById('userName');
+            const dropdownUserNameEl = document.getElementById('dropdownUserName');
+            const dropdownUserEmailEl = document.getElementById('dropdownUserEmail');
+
+            if (userInitialsEl) userInitialsEl.textContent = initials.toUpperCase();
+            if (userNameEl) userNameEl.textContent = user.first_name || user.email.split('@')[0];
+            if (dropdownUserNameEl) dropdownUserNameEl.textContent = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email;
+            if (dropdownUserEmailEl) dropdownUserEmailEl.textContent = user.email;
+        }
+
+        // showGuestUser is no longer needed since auth is required
+
+        // User menu dropdown
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (userMenuBtn) {
+            userMenuBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+        }
+
+        document.addEventListener('click', function () {
+            if (userDropdown) userDropdown.classList.add('hidden');
+        });
+
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async function () {
+                try {
+                    await fetch('/api/auth/api/logout/', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    window.location.href = '/auth/login/';
+                } catch (error) {
+                    console.error('Logout failed:', error);
+                }
+            });
+        }
+
+        // Initial auth check
+        checkAuth();
+    });
+</script>
+{% endblock %}

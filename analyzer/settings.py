@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'authentication',
     'github_bot',
+    'security_scanner',
 ]
 
 MIDDLEWARE = [
