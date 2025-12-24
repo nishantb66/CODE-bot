@@ -26,6 +26,11 @@ urlpatterns = [
     # Authentication - SSO callbacks (e.g., /sso/google/callback/)
     path('sso/', include(('authentication.urls', 'authentication'), namespace='auth_sso')),
     
+    # JWT Debugger - API endpoints
+    path('api/jwt/', include(('jwt_debugger.urls', 'jwt_debugger'), namespace='jwt_debugger_api')),
+    # JWT Debugger - Web page
+    path('jwt-debugger/', include(('jwt_debugger.web_urls', 'jwt_debugger'), namespace='jwt_debugger_pages')),
+    
     # GitHub Bot - API endpoints (e.g., /api/chat/, /api/review-code/)
     path('api/', include(('github_bot.urls', 'github_bot'), namespace='github_bot_api')),
     

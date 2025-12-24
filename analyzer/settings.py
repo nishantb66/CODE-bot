@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'authentication',
     'github_bot',
     'security_scanner',
+    'jwt_debugger',
 ]
 
 MIDDLEWARE = [

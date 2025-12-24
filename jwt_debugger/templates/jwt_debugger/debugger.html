@@ -1,0 +1,1206 @@
+{% extends "github_bot/base.html" %}
+
+{% block title %}JWT Debugger{% endblock %}
+
+{% block extra_head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.08), transparent 35%),
+                    radial-gradient(circle at 80% 10%, rgba(14, 165, 233, 0.12), transparent 35%),
+                    #0f172a;
+    }
+
+    .jwt-shell {
+        backdrop-filter: blur(10px);
+    }
+
+    .panel-title {
+        letter-spacing: -0.01em;
+    }
+
+    .code-block {
+        font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    }
+
+    .badge-pill {
+        border-radius: 9999px;
+    }
+
+    .glow-ring {
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(148, 163, 184, 0.08);
+    }
+
+    .gradient-border {
+        position: relative;
+    }
+
+    .gradient-border::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        padding: 1px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(34,197,94,0.5), rgba(14,165,233,0.4));
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+                mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .hero-grid {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.7), rgba(30, 41, 59, 0.6));
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-grid::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 18px;
+        background: radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.08), transparent 40%),
+                    radial-gradient(circle at 80% 10%, rgba(14, 165, 233, 0.06), transparent 40%);
+        pointer-events: none;
+    }
+
+    .hero-grid .hero-text {
+        color: #f1f5f9;
+    }
+
+    .hero-grid .hero-subtext {
+        color: #cbd5e1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen text-slate-50">
+    <!-- Navigation Header -->
+    <header class="bg-slate-900/90 border-b border-white/10 sticky top-0 z-30 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            <div class="flex items-center justify-between gap-4">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-3">
+                    <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div class="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </div>
+                        <div class="hidden sm:block">
+                            <h1 class="text-base font-semibold text-slate-50">JWT Debugger</h1>
+                            <p class="text-xs text-slate-400">Inspect & Sign Tokens</p>
+                        </div>
+                        <h1 class="sm:hidden text-base font-semibold text-slate-50">JWT Debugger</h1>
+                    </a>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-2">
+                    <!-- Navigation Links -->
+                    <a href="/" 
+                        class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-slate-50 hover:bg-white/5 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                            </path>
+                        </svg>
+                        <span class="hidden sm:inline">Home</span>
+                    </a>
+                    
+                    <a href="/code-review/" 
+                        class="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-slate-50 hover:bg-white/5 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        <span>Code Review</span>
+                    </a>
+                    
+                    <a href="/security/" 
+                        class="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 hover:text-slate-50 hover:bg-white/5 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                            </path>
+                        </svg>
+                        <span>Security</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-14">
+        <div class="hero-grid rounded-2xl p-7 sm:p-10 mb-8 gradient-border relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                <div class="space-y-3 hero-text">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-900/50 border border-emerald-500/30 text-emerald-100 text-xs uppercase tracking-wide badge-pill">
+                        Realtime JWT debugger
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">Inspect, verify, and craft JWTs with clarity.</h1>
+                    <p class="hero-subtext text-base max-w-3xl leading-relaxed">Paste a token to see its header and claims, verify signatures with your own keys, or generate fresh tokens using safe defaults. All processing happens in-memory; nothing is stored.</p>
+                    <div class="flex flex-wrap gap-3 text-sm">
+                        <span class="badge-pill bg-slate-800/50 border border-slate-600/30 px-3 py-1 text-slate-200">Signature verification</span>
+                        <span class="badge-pill bg-slate-800/50 border border-slate-600/30 px-3 py-1 text-slate-200">Payload JSON preview</span>
+                        <span class="badge-pill bg-slate-800/50 border border-slate-600/30 px-3 py-1 text-slate-200">Multiple algorithms</span>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-0 blur-3xl bg-emerald-400/20"></div>
+                    <div class="relative bg-slate-900/80 border border-white/10 rounded-xl p-5 shadow-2xl w-[320px]">
+                        <div class="flex items-center justify-between text-xs text-slate-200/70 mb-2">
+                            <span>Trace</span>
+                            <span>Live</span>
+                        </div>
+                        <div class="space-y-2 text-emerald-100 font-mono text-xs">
+                            <div class="flex items-start gap-2">
+                                <span class="text-emerald-400">decode</span>
+                                <span class="truncate">header, payload, signature</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-cyan-300">verify</span>
+                                <span class="truncate">alg=HS256 · exp, nbf, aud</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-amber-300">warn</span>
+                                <span class="truncate">signature disabled → trust carefully</span>
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <span class="text-emerald-300">sign</span>
+                                <span class="truncate">new token issued · secure default exp</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6 items-start">
+            <div class="space-y-5">
+                <!-- Tabs Navigation -->
+                <div class="flex flex-wrap gap-2 border-b border-white/10 pb-4 -mx-6 px-6 sm:mx-0 sm:px-0">
+                    <button onclick="switchTab('decode')" id="tab-decode" 
+                        class="tab-button px-4 py-2 text-sm font-medium text-emerald-300 border-b-2 border-emerald-500 transition-colors">
+                        Decode & Verify
+                    </button>
+                    <button onclick="switchTab('sign')" id="tab-sign" 
+                        class="tab-button px-4 py-2 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:border-slate-600 transition-colors">
+                        Sign Token
+                    </button>
+                    <button onclick="switchTab('keygen')" id="tab-keygen" 
+                        class="tab-button px-4 py-2 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:border-slate-600 transition-colors">
+                        Generate Keys
+                    </button>
+                    <button onclick="switchTab('codegen')" id="tab-codegen" 
+                        class="tab-button px-4 py-2 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:border-slate-600 transition-colors">
+                        Code
+                    </button>
+                    <button onclick="switchTab('security')" id="tab-security" 
+                        class="tab-button px-4 py-2 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:border-slate-600 transition-colors">
+                        Security Scan
+                    </button>
+                    <button onclick="switchTab('jwks')" id="tab-jwks" 
+                        class="tab-button px-4 py-2 text-sm font-medium text-slate-400 border-b-2 border-transparent hover:border-slate-600 transition-colors">
+                        JWKS
+                    </button>
+                </div>
+
+                <!-- Key Generator Tab -->
+                <div id="panel-keygen" class="tab-panel hidden bg-slate-900/80 border border-white/10 rounded-2xl p-6 shadow-2xl jwt-shell">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs uppercase text-purple-300 tracking-wide">Key Generation</p>
+                            <h2 class="panel-title text-xl font-semibold">Generate cryptographic keys</h2>
+                        </div>
+                        <button id="resetKeygen" class="text-sm text-purple-200 hover:text-purple-100">Reset</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-200/80 mb-3 block">Key Type</label>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100 cursor-pointer">
+                                    <input type="radio" name="keyType" value="HS256" class="keyTypeRadio" checked>
+                                    <span>HS256 (HMAC)</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100 cursor-pointer">
+                                    <input type="radio" name="keyType" value="RSA" class="keyTypeRadio">
+                                    <span>RSA</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100 cursor-pointer">
+                                    <input type="radio" name="keyType" value="EC" class="keyTypeRadio">
+                                    <span>EC (Elliptic Curve)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="ecCurveOptions" class="hidden">
+                            <label class="text-sm text-slate-200/80 mb-3 block">Curve (EC)</label>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100 cursor-pointer">
+                                    <input type="radio" name="ecCurve" value="P-256" checked>
+                                    <span>P-256</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100 cursor-pointer">
+                                    <input type="radio" name="ecCurve" value="P-384">
+                                    <span>P-384</span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100 cursor-pointer">
+                                    <input type="radio" name="ecCurve" value="P-521">
+                                    <span>P-521</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 pt-2">
+                            <button id="generateKeyBtn" class="px-4 py-2.5 bg-purple-500 hover:bg-purple-400 text-slate-900 font-semibold rounded-xl btn-hover">Generate</button>
+                            <div id="keygenStatus" class="text-sm text-slate-200/80"></div>
+                        </div>
+                    </div>
+
+                    <div id="generatedKeysPanel" class="hidden mt-6 space-y-4 pt-6 border-t border-white/10">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-200/80">Public Key</span>
+                                <button class="copyBtn-keygen text-purple-300 hover:text-purple-200 text-sm" data-copy-target="publicKeyOutput">Copy</button>
+                            </div>
+                            <textarea id="publicKeyOutput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-xs text-slate-100 min-h-[120px] focus:outline-none" readonly></textarea>
+                        </div>
+
+                        <div id="privateKeySection">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-200/80">Private Key</span>
+                                <button class="copyBtn-keygen text-purple-300 hover:text-purple-200 text-sm" data-copy-target="privateKeyOutput">Copy</button>
+                            </div>
+                            <textarea id="privateKeyOutput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-xs text-slate-100 min-h-[120px] focus:outline-none" readonly></textarea>
+                        </div>
+
+                        <div class="bg-purple-500/10 border border-purple-400/30 text-purple-100 rounded-xl p-3 text-xs">
+                            <strong>💡 Recommendations:</strong><br>
+                            • Store private keys securely (environment variables, key vaults)<br>
+                            • Rotate keys regularly in production<br>
+                            • Use the strongest key size available for your algorithm
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Generator Tab -->
+                <div id="panel-codegen" class="tab-panel hidden bg-slate-900/80 border border-white/10 rounded-2xl p-6 shadow-2xl jwt-shell">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs uppercase text-indigo-300 tracking-wide">Code Generation</p>
+                            <h2 class="panel-title text-xl font-semibold">Generate implementation code</h2>
+                        </div>
+                        <button id="resetCodegen" class="text-sm text-indigo-200 hover:text-indigo-100">Reset</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm text-slate-200/80">Language</label>
+                                <select id="codeLanguage" class="w-full bg-slate-950/70 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                                    <option value="nodejs">Node.js</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="go">Go</option>
+                                    <option value="php">PHP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-200/80">Algorithm</label>
+                                <select id="codeAlgorithm" class="w-full bg-slate-950/70 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                                    {% for alg in algorithms %}<option value="{{ alg }}">{{ alg }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm text-slate-200/80">Secret (optional)</label>
+                                <textarea id="codeSecret" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="Leave empty for example"></textarea>
+                            </div>
+                            <div>
+                                <label class="text-sm text-slate-200/80">Token (optional)</label>
+                                <textarea id="codeToken" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-indigo-500/50" placeholder="Leave empty for example"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3">
+                            <button id="generateCodeBtn" class="px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-slate-900 font-semibold rounded-xl btn-hover">Generate Code</button>
+                            <div id="codegenStatus" class="text-sm text-slate-200/80"></div>
+                        </div>
+                    </div>
+
+                    <div id="generatedCodePanel" class="hidden mt-6 space-y-3 pt-6 border-t border-white/10">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-200/80">Generated Code</span>
+                            <button class="copyBtn-codegen text-indigo-300 hover:text-indigo-200 text-sm" data-copy-target="codeOutput">Copy</button>
+                        </div>
+                        <pre id="codeOutput" class="code-block bg-slate-950/70 border border-white/10 rounded-xl p-4 text-slate-100 overflow-auto min-h-[200px] text-xs"></pre>
+                    </div>
+                </div>
+
+                <!-- Security Scanner Tab -->
+                <div id="panel-security" class="tab-panel hidden bg-slate-900/80 border border-white/10 rounded-2xl p-6 shadow-2xl jwt-shell">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs uppercase text-red-300 tracking-wide">Security Analysis</p>
+                            <h2 class="panel-title text-xl font-semibold">Scan token for vulnerabilities</h2>
+                        </div>
+                        <button id="resetSecurity" class="text-sm text-red-200 hover:text-red-100">Reset</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-200/80">Token to scan</label>
+                            <textarea id="scanToken" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-red-500/50" placeholder="Paste JWT token here"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="text-sm text-slate-200/80">Secret/Key (optional)</label>
+                            <textarea id="scanSecret" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-red-500/50" placeholder="For signature verification"></textarea>
+                        </div>
+
+                        <label class="inline-flex items-center gap-2 text-sm text-slate-100">
+                            <input id="verifySigCheckbox" type="checkbox" class="rounded border-white/20 bg-slate-950/80">
+                            Verify signature
+                        </label>
+
+                        <div class="flex flex-wrap gap-3">
+                            <button id="scanSecurityBtn" class="px-4 py-2.5 bg-red-500 hover:bg-red-400 text-slate-900 font-semibold rounded-xl btn-hover">Scan</button>
+                            <div id="securityStatus" class="text-sm text-slate-200/80"></div>
+                        </div>
+                    </div>
+
+                    <div id="securityResultsPanel" class="hidden mt-6 space-y-4 pt-6 border-t border-white/10">
+                        <div class="flex items-center gap-3">
+                            <div>
+                                <p class="text-xs uppercase text-slate-400 tracking-wide">Security Score</p>
+                                <div class="flex items-end gap-2">
+                                    <span id="securityScore" class="text-3xl font-bold text-slate-100">—</span>
+                                    <span class="text-sm text-slate-400">/100</span>
+                                </div>
+                            </div>
+                            <div id="securityScoreBar" class="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div id="securityScoreIndicator" class="h-full bg-slate-400 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="issuesPanel" class="space-y-2">
+                            <p class="text-sm text-slate-200/80">Security Issues:</p>
+                            <div id="issuesList" class="space-y-2"></div>
+                        </div>
+
+                        <div id="recommendationsPanel" class="bg-blue-500/10 border border-blue-400/30 text-blue-100 rounded-xl p-3 text-sm hidden">
+                            <strong>Recommendations:</strong>
+                            <ul id="recommendationsList" class="mt-2 space-y-1 text-xs list-disc list-inside"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JWKS Integration Tab -->
+                <div id="panel-jwks" class="tab-panel hidden bg-slate-900/80 border border-white/10 rounded-2xl p-6 shadow-2xl jwt-shell">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs uppercase text-teal-300 tracking-wide">JWKS Integration</p>
+                            <h2 class="panel-title text-xl font-semibold">Fetch keys from JWKS endpoints</h2>
+                        </div>
+                        <button id="resetJwks" class="text-sm text-teal-200 hover:text-teal-100">Reset</button>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm text-slate-200/80">JWKS URL</label>
+                            <input id="jwksUrl" type="text" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/50" placeholder="https://example.com/.well-known/jwks.json">
+                        </div>
+
+                        <div class="flex flex-wrap gap-3">
+                            <button id="fetchJwksBtn" class="px-4 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-900 font-semibold rounded-xl btn-hover">Fetch Keys</button>
+                            <div id="jwksStatus" class="text-sm text-slate-200/80"></div>
+                        </div>
+                    </div>
+
+                    <div id="jwksResultsPanel" class="hidden mt-6 space-y-4 pt-6 border-t border-white/10">
+                        <p class="text-sm text-slate-200/80">Keys found:</p>
+                        <div id="keysList" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Decode Tab -->
+                <div id="panel-decode" class="tab-panel">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs uppercase text-emerald-300 tracking-wide">Decode & verify</p>
+                            <h2 class="panel-title text-xl font-semibold">Inspect an existing token</h2>
+                        </div>
+                        <button id="loadExample" class="text-sm text-emerald-300 hover:text-emerald-200">Load example</button>
+                    </div>
+                    <div class="space-y-4">
+                        <label class="text-sm text-slate-200/80">JWT</label>
+                        <textarea id="tokenInput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[140px] focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="Paste a JWT here"></textarea>
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm text-slate-200/80">Shared secret / public key</label>
+                                <textarea id="secretInput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="HS* uses a shared secret; RS/ES/PS expect a PEM key"></textarea>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="space-y-1">
+                                    <label class="text-sm text-slate-200/80">Algorithm</label>
+                                    <select id="algorithmSelect" class="w-full bg-slate-950/70 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+                                        <option value="auto">Auto (from header)</option>
+                                        {% for alg in algorithms %}<option value="{{ alg }}">{{ alg }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <label class="inline-flex items-center gap-2 text-sm text-slate-100">
+                                    <input id="verifyToggle" type="checkbox" class="rounded border-white/20 bg-slate-950/80" checked>
+                                    Verify signature and claims
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input id="audienceInput" type="text" class="bg-slate-950/70 border border-white/10 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="aud (optional)">
+                                    <input id="issuerInput" type="text" class="bg-slate-950/70 border border-white/10 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" placeholder="iss (optional)">
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input id="leewayInput" type="number" min="0" max="86400" value="0" class="w-24 bg-slate-950/70 border border-white/10 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+                                    <span class="text-xs text-slate-400">Leeway (seconds)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-3 pt-1">
+                            <button id="inspectBtn" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold rounded-xl btn-hover">Inspect token</button>
+                            <button id="clearBtn" class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-100 rounded-xl">Clear</button>
+                            <div id="inspectStatus" class="text-sm text-slate-200/80"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 border border-white/10 rounded-2xl p-6 shadow-2xl jwt-shell">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-xs uppercase text-cyan-300 tracking-wide">Sign & craft</p>
+                            <h2 class="panel-title text-xl font-semibold">Generate a new token</h2>
+                        </div>
+                        <button id="resetComposer" class="text-sm text-cyan-200 hover:text-cyan-100">Reset</button>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-4 mb-3">
+                        <div>
+                            <label class="text-sm text-slate-200/80">Header (JSON)</label>
+                            <textarea id="headerInput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-cyan-500/50"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-sm text-slate-200/80">Payload (JSON)</label>
+                            <textarea id="payloadInput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-cyan-500/50"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-sm text-slate-200/80">Secret / private key</label>
+                            <textarea id="signingKeyInput" class="w-full bg-slate-950/70 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-cyan-500/50" placeholder="HS* requires shared secret; RS/ES/PS require private key"></textarea>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-sm text-slate-200/80">Algorithm</label>
+                                    <select id="signAlgorithm" class="w-full bg-slate-950/70 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50">
+                                        {% for alg in algorithms %}<option value="{{ alg }}">{{ alg }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm text-slate-200/80">Expiry (seconds)</label>
+                                    <input id="expiryInput" type="number" min="0" value="3600" class="w-full bg-slate-950/70 border border-white/10 rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50">
+                                </div>
+                            </div>
+                            <label class="inline-flex items-center gap-2 text-sm text-slate-100">
+                                <input id="includeIat" type="checkbox" class="rounded border-white/20 bg-slate-950/80" checked>
+                                Include issued-at (iat)
+                            </label>
+                            <div class="text-xs text-slate-400">We never persist your secrets or tokens. Everything happens client-to-server only for this session.</div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mt-4">
+                        <button id="signBtn" class="px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold rounded-xl btn-hover">Generate token</button>
+                        <div id="signStatus" class="text-sm text-slate-200/80"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/90 border border-white/10 rounded-2xl p-6 shadow-2xl space-y-5 jwt-shell glow-ring">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase text-amber-300 tracking-wide">Results</p>
+                        <h2 class="panel-title text-xl font-semibold">Decoded and generated output</h2>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-slate-300">
+                        <span id="signatureBadge" class="badge-pill px-3 py-1 bg-white/5 border border-white/10">Awaiting input</span>
+                        <span id="algorithmBadge" class="badge-pill px-3 py-1 bg-white/5 border border-white/10">—</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm text-slate-200/80">
+                        <span>Header</span>
+                        <button data-copy-target="headerOutput" class="copyBtn text-emerald-300 hover:text-emerald-200">Copy</button>
+                    </div>
+                    <pre id="headerOutput" class="code-block bg-slate-950/80 border border-white/10 rounded-xl p-4 text-emerald-100 overflow-auto min-h-[120px]">{}</pre>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm text-slate-200/80">
+                        <span>Payload</span>
+                        <button data-copy-target="payloadOutput" class="copyBtn text-emerald-300 hover:text-emerald-200">Copy</button>
+                    </div>
+                    <pre id="payloadOutput" class="code-block bg-slate-950/80 border border-white/10 rounded-xl p-4 text-cyan-100 overflow-auto min-h-[160px]">{}</pre>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-sm text-slate-200/80">
+                        <span>Generated token</span>
+                        <button data-copy-target="signedTokenOutput" class="copyBtn text-emerald-300 hover:text-emerald-200">Copy</button>
+                    </div>
+                    <textarea id="signedTokenOutput" class="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3 code-block text-sm text-slate-100 min-h-[120px] focus:outline-none" readonly placeholder="Sign a token to see it here"></textarea>
+                </div>
+
+                <div id="warningsPanel" class="bg-amber-500/10 border border-amber-400/30 text-amber-100 rounded-xl p-3 text-sm hidden"></div>
+                <div id="errorsPanel" class="bg-red-500/10 border border-red-400/30 text-red-100 rounded-xl p-3 text-sm hidden"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const tokenInput = document.getElementById('tokenInput');
+    const secretInput = document.getElementById('secretInput');
+    const algorithmSelect = document.getElementById('algorithmSelect');
+    const verifyToggle = document.getElementById('verifyToggle');
+    const audienceInput = document.getElementById('audienceInput');
+    const issuerInput = document.getElementById('issuerInput');
+    const leewayInput = document.getElementById('leewayInput');
+    const headerOutput = document.getElementById('headerOutput');
+    const payloadOutput = document.getElementById('payloadOutput');
+    const signatureBadge = document.getElementById('signatureBadge');
+    const algorithmBadge = document.getElementById('algorithmBadge');
+    const inspectStatus = document.getElementById('inspectStatus');
+    const warningsPanel = document.getElementById('warningsPanel');
+    const errorsPanel = document.getElementById('errorsPanel');
+    const signedTokenOutput = document.getElementById('signedTokenOutput');
+    const inspectBtn = document.getElementById('inspectBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const loadExample = document.getElementById('loadExample');
+
+    const headerInput = document.getElementById('headerInput');
+    const payloadInput = document.getElementById('payloadInput');
+    const signingKeyInput = document.getElementById('signingKeyInput');
+    const signAlgorithm = document.getElementById('signAlgorithm');
+    const expiryInput = document.getElementById('expiryInput');
+    const includeIat = document.getElementById('includeIat');
+    const signBtn = document.getElementById('signBtn');
+    const signStatus = document.getElementById('signStatus');
+    const resetComposer = document.getElementById('resetComposer');
+
+    const copyButtons = document.querySelectorAll('.copyBtn');
+
+    function pretty(obj) {
+        try {
+            return JSON.stringify(obj, null, 2);
+        } catch (e) {
+            return '{}';
+        }
+    }
+
+    function setBadge(statusText, ok) {
+        signatureBadge.textContent = statusText;
+        signatureBadge.className = 'badge-pill px-3 py-1 ' + (ok ? 'bg-emerald-500/20 border border-emerald-300/50 text-emerald-50' : 'bg-red-500/15 border border-red-300/60 text-red-100');
+    }
+
+    function setAlgorithmBadge(text) {
+        algorithmBadge.textContent = text;
+    }
+
+    function showWarnings(list) {
+        if (list && list.length) {
+            warningsPanel.innerHTML = '<strong>Warnings:</strong> ' + list.join(' · ');
+            warningsPanel.classList.remove('hidden');
+        } else {
+            warningsPanel.classList.add('hidden');
+            warningsPanel.innerHTML = '';
+        }
+    }
+
+    function showError(message) {
+        if (message) {
+            errorsPanel.textContent = message;
+            errorsPanel.classList.remove('hidden');
+        } else {
+            errorsPanel.textContent = '';
+            errorsPanel.classList.add('hidden');
+        }
+    }
+
+    function setOutputs(header, payload) {
+        headerOutput.textContent = pretty(header || {});
+        payloadOutput.textContent = pretty(payload || {});
+    }
+
+    async function inspectToken() {
+        showError('');
+        showWarnings([]);
+        inspectStatus.textContent = '';
+
+        const token = tokenInput.value.trim();
+        if (!token) {
+            showError('Please paste a JWT to inspect.');
+            setBadge('Awaiting input', false);
+            return;
+        }
+
+        const body = {
+            token,
+            secret: secretInput.value.trim(),
+            algorithm: algorithmSelect.value,
+            verify_signature: verifyToggle.checked,
+            audience: audienceInput.value.trim(),
+            issuer: issuerInput.value.trim(),
+            leeway_seconds: parseInt(leewayInput.value || '0', 10),
+        };
+
+        inspectBtn.disabled = true;
+        inspectBtn.textContent = 'Inspecting...';
+        inspectStatus.textContent = 'Running decode locally...';
+
+        try {
+            const res = await fetch('/api/jwt/inspect/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                showError(data.error || 'Unable to inspect token');
+                setBadge('Invalid', false);
+                setAlgorithmBadge(body.algorithm === 'auto' ? 'auto' : body.algorithm);
+                return;
+            }
+
+            setOutputs(data.header, data.payload);
+            setBadge(data.signature_valid ? 'Signature valid' : 'Decoded (unverified)', data.signature_valid);
+            setAlgorithmBadge(data.algorithm || '—');
+            showWarnings(data.warnings || []);
+            inspectStatus.textContent = 'Decoded successfully';
+        } catch (err) {
+            showError(err.message || 'Unexpected error');
+            setBadge('Error', false);
+        } finally {
+            inspectBtn.disabled = false;
+            inspectBtn.textContent = 'Inspect token';
+        }
+    }
+
+    function resetDecoder() {
+        tokenInput.value = '';
+        secretInput.value = '';
+        algorithmSelect.value = 'auto';
+        audienceInput.value = '';
+        issuerInput.value = '';
+        leewayInput.value = 0;
+        verifyToggle.checked = true;
+        setOutputs({}, {});
+        setBadge('Awaiting input', false);
+        setAlgorithmBadge('—');
+        showWarnings([]);
+        showError('');
+        inspectStatus.textContent = '';
+    }
+
+    function loadSample() {
+        const sampleHeader = {"alg":"HS256","typ":"JWT"};
+        const samplePayload = {"sub":"user-123","name":"Ada Lovelace","admin":true,"iat":Math.floor(Date.now()/1000)};
+        const sampleTokenParts = [
+            btoa(JSON.stringify(sampleHeader)),
+            btoa(JSON.stringify(samplePayload)),
+            'signature-placeholder'
+        ];
+        tokenInput.value = sampleTokenParts.join('.') + ' (replace with a real token to verify)';
+        headerInput.value = pretty(sampleHeader);
+        payloadInput.value = pretty(samplePayload);
+    }
+
+    async function signToken() {
+        showError('');
+        showWarnings([]);
+        signStatus.textContent = '';
+
+        let header, payload;
+        try {
+            header = JSON.parse(headerInput.value || '{}');
+        } catch (e) {
+            showError('Header is not valid JSON');
+            return;
+        }
+        try {
+            payload = JSON.parse(payloadInput.value || '{}');
+        } catch (e) {
+            showError('Payload is not valid JSON');
+            return;
+        }
+
+        const body = {
+            header,
+            payload,
+            secret: signingKeyInput.value.trim(),
+            algorithm: signAlgorithm.value,
+            expires_in_seconds: parseInt(expiryInput.value || '0', 10),
+            include_iat: includeIat.checked,
+        };
+
+        signBtn.disabled = true;
+        signBtn.textContent = 'Signing...';
+        signStatus.textContent = 'Creating token...';
+
+        try {
+            const res = await fetch('/api/jwt/sign/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                showError(data.error || 'Unable to sign token');
+                return;
+            }
+
+            signedTokenOutput.value = data.token;
+            setOutputs(data.header, data.payload);
+            setBadge('Signed', true);
+            setAlgorithmBadge(data.algorithm || '—');
+            showWarnings(data.warnings || []);
+            signStatus.textContent = 'Token generated';
+        } catch (err) {
+            showError(err.message || 'Unexpected error');
+        } finally {
+            signBtn.disabled = false;
+            signBtn.textContent = 'Generate token';
+        }
+    }
+
+    function resetComposerForm() {
+        headerInput.value = pretty({ alg: 'HS256', typ: 'JWT' });
+        payloadInput.value = pretty({ sub: 'user-123', name: 'Ada Lovelace', iat: Math.floor(Date.now() / 1000) });
+        signingKeyInput.value = 'super-secret-key';
+        signAlgorithm.value = signAlgorithm.options[0].value;
+        expiryInput.value = 3600;
+        includeIat.checked = true;
+        signedTokenOutput.value = '';
+        signStatus.textContent = '';
+        showWarnings([]);
+        showError('');
+    }
+
+    copyButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-copy-target');
+            const el = document.getElementById(targetId);
+            if (!el) return;
+            const value = el.value !== undefined ? el.value : el.textContent;
+            navigator.clipboard.writeText(value || '').then(() => {
+                btn.textContent = 'Copied';
+                setTimeout(() => btn.textContent = 'Copy', 1200);
+            });
+        });
+    });
+
+    inspectBtn.addEventListener('click', (e) => { e.preventDefault(); inspectToken(); });
+    clearBtn.addEventListener('click', (e) => { e.preventDefault(); resetDecoder(); });
+    loadExample.addEventListener('click', (e) => { e.preventDefault(); loadSample(); });
+    signBtn.addEventListener('click', (e) => { e.preventDefault(); signToken(); });
+    resetComposer.addEventListener('click', (e) => { e.preventDefault(); resetComposerForm(); });
+
+    // Tab switching logic
+    function switchTab(tabName) {
+        // Hide all panels
+        const panels = document.querySelectorAll('.tab-panel');
+        panels.forEach(p => p.classList.add('hidden'));
+
+        // Show selected panel
+        const selectedPanel = document.getElementById(`panel-${tabName}`);
+        if (selectedPanel) {
+            selectedPanel.classList.remove('hidden');
+        }
+
+        // Update tab styles
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(t => {
+            t.classList.remove('text-emerald-300', 'text-cyan-300', 'text-purple-300', 'text-indigo-300', 'text-red-300', 'text-teal-300', 'border-emerald-500', 'border-cyan-500', 'border-purple-500', 'border-indigo-500', 'border-red-500', 'border-teal-500');
+            t.classList.add('text-slate-400', 'border-transparent');
+        });
+
+        const activeTab = document.getElementById(`tab-${tabName}`);
+        if (activeTab) {
+            activeTab.classList.remove('text-slate-400', 'border-transparent');
+            if (tabName === 'decode') activeTab.classList.add('text-emerald-300', 'border-emerald-500');
+            else if (tabName === 'sign') activeTab.classList.add('text-cyan-300', 'border-cyan-500');
+            else if (tabName === 'keygen') activeTab.classList.add('text-purple-300', 'border-purple-500');
+            else if (tabName === 'codegen') activeTab.classList.add('text-indigo-300', 'border-indigo-500');
+            else if (tabName === 'security') activeTab.classList.add('text-red-300', 'border-red-500');
+            else if (tabName === 'jwks') activeTab.classList.add('text-teal-300', 'border-teal-500');
+        }
+    }
+
+    // Key Generator Functions
+    const keyTypeRadios = document.querySelectorAll('.keyTypeRadio');
+    const ecCurveOptions = document.getElementById('ecCurveOptions');
+    const generateKeyBtn = document.getElementById('generateKeyBtn');
+    const resetKeygen = document.getElementById('resetKeygen');
+    const keygenStatus = document.getElementById('keygenStatus');
+    const generatedKeysPanel = document.getElementById('generatedKeysPanel');
+    const publicKeyOutput = document.getElementById('publicKeyOutput');
+    const privateKeyOutput = document.getElementById('privateKeyOutput');
+    const privateKeySection = document.getElementById('privateKeySection');
+
+    keyTypeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.value === 'EC') {
+                ecCurveOptions.classList.remove('hidden');
+            } else {
+                ecCurveOptions.classList.add('hidden');
+            }
+        });
+    });
+
+    async function generateKeys() {
+        const keyType = document.querySelector('input[name="keyType"]:checked').value;
+        const ecCurve = keyType === 'EC' ? document.querySelector('input[name="ecCurve"]:checked').value : null;
+
+        generateKeyBtn.disabled = true;
+        generateKeyBtn.textContent = 'Generating...';
+        keygenStatus.textContent = 'Generating keys...';
+
+        try {
+            const res = await fetch('/api/jwt/generate-key/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    key_type: keyType,
+                    ec_curve: ecCurve,
+                }),
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                keygenStatus.textContent = `Error: ${data.error || 'Unable to generate keys'}`;
+                return;
+            }
+
+            publicKeyOutput.value = data.public_key;
+            if (keyType === 'HS256') {
+                privateKeySection.classList.add('hidden');
+                privateKeyOutput.value = data.secret || '';
+            } else {
+                privateKeySection.classList.remove('hidden');
+                privateKeyOutput.value = data.private_key || '';
+            }
+            generatedKeysPanel.classList.remove('hidden');
+            keygenStatus.textContent = 'Keys generated successfully';
+        } catch (err) {
+            keygenStatus.textContent = `Error: ${err.message || 'Unexpected error'}`;
+        } finally {
+            generateKeyBtn.disabled = false;
+            generateKeyBtn.textContent = 'Generate';
+        }
+    }
+
+    function resetKeygenForm() {
+        document.querySelector('input[name="keyType"][value="HS256"]').checked = true;
+        ecCurveOptions.classList.add('hidden');
+        publicKeyOutput.value = '';
+        privateKeyOutput.value = '';
+        generatedKeysPanel.classList.add('hidden');
+        keygenStatus.textContent = '';
+    }
+
+    generateKeyBtn.addEventListener('click', (e) => { e.preventDefault(); generateKeys(); });
+    resetKeygen.addEventListener('click', (e) => { e.preventDefault(); resetKeygenForm(); });
+
+    // Code Generator Functions
+    const codeLanguage = document.getElementById('codeLanguage');
+    const codeAlgorithm = document.getElementById('codeAlgorithm');
+    const codeSecret = document.getElementById('codeSecret');
+    const codeToken = document.getElementById('codeToken');
+    const generateCodeBtn = document.getElementById('generateCodeBtn');
+    const resetCodegen = document.getElementById('resetCodegen');
+    const codegenStatus = document.getElementById('codegenStatus');
+    const generatedCodePanel = document.getElementById('generatedCodePanel');
+    const codeOutput = document.getElementById('codeOutput');
+
+    async function generateCode() {
+        const language = codeLanguage.value;
+        const algorithm = codeAlgorithm.value;
+
+        generateCodeBtn.disabled = true;
+        generateCodeBtn.textContent = 'Generating...';
+        codegenStatus.textContent = 'Generating code...';
+
+        try {
+            const res = await fetch('/api/jwt/generate-code/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    language,
+                    algorithm,
+                    secret: codeSecret.value.trim(),
+                    token: codeToken.value.trim(),
+                }),
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                codegenStatus.textContent = `Error: ${data.error || 'Unable to generate code'}`;
+                return;
+            }
+
+            codeOutput.textContent = data.code;
+            generatedCodePanel.classList.remove('hidden');
+            codegenStatus.textContent = 'Code generated successfully';
+        } catch (err) {
+            codegenStatus.textContent = `Error: ${err.message || 'Unexpected error'}`;
+        } finally {
+            generateCodeBtn.disabled = false;
+            generateCodeBtn.textContent = 'Generate Code';
+        }
+    }
+
+    function resetCodegenForm() {
+        codeLanguage.value = 'nodejs';
+        codeSecret.value = '';
+        codeToken.value = '';
+        codeOutput.textContent = '';
+        generatedCodePanel.classList.add('hidden');
+        codegenStatus.textContent = '';
+    }
+
+    generateCodeBtn.addEventListener('click', (e) => { e.preventDefault(); generateCode(); });
+    resetCodegen.addEventListener('click', (e) => { e.preventDefault(); resetCodegenForm(); });
+
+    // Security Scanner Functions
+    const scanToken = document.getElementById('scanToken');
+    const scanSecret = document.getElementById('scanSecret');
+    const verifySigCheckbox = document.getElementById('verifySigCheckbox');
+    const scanSecurityBtn = document.getElementById('scanSecurityBtn');
+    const resetSecurity = document.getElementById('resetSecurity');
+    const securityStatus = document.getElementById('securityStatus');
+    const securityResultsPanel = document.getElementById('securityResultsPanel');
+    const securityScore = document.getElementById('securityScore');
+    const securityScoreIndicator = document.getElementById('securityScoreIndicator');
+    const issuesList = document.getElementById('issuesList');
+    const recommendationsPanel = document.getElementById('recommendationsPanel');
+    const recommendationsList = document.getElementById('recommendationsList');
+
+    function getIssueColor(severity) {
+        if (severity === 'critical') return 'bg-red-500/15 border-red-300/60 text-red-100';
+        if (severity === 'high') return 'bg-orange-500/15 border-orange-300/60 text-orange-100';
+        if (severity === 'medium') return 'bg-yellow-500/15 border-yellow-300/60 text-yellow-100';
+        return 'bg-blue-500/15 border-blue-300/60 text-blue-100';
+    }
+
+    function getScoreColor(score) {
+        if (score >= 80) return 'text-emerald-400';
+        if (score >= 60) return 'text-yellow-400';
+        if (score >= 40) return 'text-orange-400';
+        return 'text-red-400';
+    }
+
+    async function scanSecurity() {
+        const token = scanToken.value.trim();
+        if (!token) {
+            securityStatus.textContent = 'Please paste a token to scan';
+            return;
+        }
+
+        scanSecurityBtn.disabled = true;
+        scanSecurityBtn.textContent = 'Scanning...';
+        securityStatus.textContent = 'Scanning for vulnerabilities...';
+
+        try {
+            const res = await fetch('/api/jwt/security-scan/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    token,
+                    secret: scanSecret.value.trim(),
+                    verify_signature: verifySigCheckbox.checked,
+                }),
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                securityStatus.textContent = `Error: ${data.error || 'Unable to scan'}`;
+                return;
+            }
+
+            // Update score
+            const score = data.score || 0;
+            securityScore.textContent = score;
+            securityScore.className = `text-3xl font-bold ${getScoreColor(score)}`;
+            securityScoreIndicator.style.width = `${Math.min(100, score)}%`;
+            securityScoreIndicator.className = `h-full rounded-full ${score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-yellow-500' : score >= 40 ? 'bg-orange-500' : 'bg-red-500'}`;
+
+            // Display issues
+            issuesList.innerHTML = '';
+            if (data.issues && data.issues.length > 0) {
+                data.issues.forEach(issue => {
+                    const issueEl = document.createElement('div');
+                    issueEl.className = `rounded-lg p-3 border ${getIssueColor(issue.severity)}`;
+                    issueEl.innerHTML = `<strong>${issue.title}</strong><br><span class="text-xs">${issue.description}</span>`;
+                    issuesList.appendChild(issueEl);
+                });
+            } else {
+                issuesList.innerHTML = '<div class="text-sm text-emerald-100 bg-emerald-500/10 border border-emerald-400/30 p-3 rounded-lg">✓ No security issues found</div>';
+            }
+
+            // Display recommendations
+            if (data.recommendations && data.recommendations.length > 0) {
+                recommendationsList.innerHTML = '';
+                data.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.textContent = rec;
+                    recommendationsList.appendChild(li);
+                });
+                recommendationsPanel.classList.remove('hidden');
+            } else {
+                recommendationsPanel.classList.add('hidden');
+            }
+
+            securityResultsPanel.classList.remove('hidden');
+            securityStatus.textContent = 'Scan completed';
+        } catch (err) {
+            securityStatus.textContent = `Error: ${err.message || 'Unexpected error'}`;
+        } finally {
+            scanSecurityBtn.disabled = false;
+            scanSecurityBtn.textContent = 'Scan';
+        }
+    }
+
+    function resetSecurityForm() {
+        scanToken.value = '';
+        scanSecret.value = '';
+        verifySigCheckbox.checked = false;
+        securityResultsPanel.classList.add('hidden');
+        securityStatus.textContent = '';
+    }
+
+    scanSecurityBtn.addEventListener('click', (e) => { e.preventDefault(); scanSecurity(); });
+    resetSecurity.addEventListener('click', (e) => { e.preventDefault(); resetSecurityForm(); });
+
+    // JWKS Integration Functions
+    const jwksUrl = document.getElementById('jwksUrl');
+    const fetchJwksBtn = document.getElementById('fetchJwksBtn');
+    const resetJwks = document.getElementById('resetJwks');
+    const jwksStatus = document.getElementById('jwksStatus');
+    const jwksResultsPanel = document.getElementById('jwksResultsPanel');
+    const keysList = document.getElementById('keysList');
+
+    async function fetchJwks() {
+        const url = jwksUrl.value.trim();
+        if (!url) {
+            jwksStatus.textContent = 'Please enter a JWKS URL';
+            return;
+        }
+
+        fetchJwksBtn.disabled = true;
+        fetchJwksBtn.textContent = 'Fetching...';
+        jwksStatus.textContent = 'Fetching JWKS endpoint...';
+
+        try {
+            const res = await fetch('/api/jwt/jwks/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ jwks_url: url }),
+            });
+            const data = await res.json();
+
+            if (!data.success) {
+                jwksStatus.textContent = `Error: ${data.error || 'Unable to fetch JWKS'}`;
+                return;
+            }
+
+            // Display keys
+            keysList.innerHTML = '';
+            if (data.keys && data.keys.length > 0) {
+                data.keys.forEach((key, idx) => {
+                    const keyEl = document.createElement('div');
+                    keyEl.className = 'bg-slate-950/70 border border-white/10 rounded-lg p-4';
+                    const keyData = JSON.stringify(key, null, 2);
+                    keyEl.innerHTML = `
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm text-slate-200/80">Key ${idx + 1} (${key.kty || 'Unknown'})</span>
+                            <button onclick="copyToClipboard(\`${keyData.replace(/`/g, '\\`')}\`)" class="text-teal-300 hover:text-teal-200 text-xs">Copy</button>
+                        </div>
+                        <pre class="code-block bg-slate-950/80 border border-white/10 rounded-lg p-3 text-slate-100 overflow-auto text-xs max-h-[200px]">${keyData}</pre>
+                    `;
+                    keysList.appendChild(keyEl);
+                });
+            } else {
+                keysList.innerHTML = '<div class="text-sm text-slate-300">No keys found in JWKS endpoint</div>';
+            }
+
+            jwksResultsPanel.classList.remove('hidden');
+            jwksStatus.textContent = `Found ${data.keys ? data.keys.length : 0} keys`;
+        } catch (err) {
+            jwksStatus.textContent = `Error: ${err.message || 'Unexpected error'}`;
+        } finally {
+            fetchJwksBtn.disabled = false;
+            fetchJwksBtn.textContent = 'Fetch Keys';
+        }
+    }
+
+    function resetJwksForm() {
+        jwksUrl.value = '';
+        keysList.innerHTML = '';
+        jwksResultsPanel.classList.add('hidden');
+        jwksStatus.textContent = '';
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied to clipboard!');
+        });
+    }
+
+    fetchJwksBtn.addEventListener('click', (e) => { e.preventDefault(); fetchJwks(); });
+    resetJwks.addEventListener('click', (e) => { e.preventDefault(); resetJwksForm(); });
+
+    // Enhanced copy buttons for new panels
+    document.querySelectorAll('.copyBtn-keygen, .copyBtn-codegen').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-copy-target');
+            const el = document.getElementById(targetId);
+            if (!el) return;
+            const value = el.value !== undefined ? el.value : el.textContent;
+            navigator.clipboard.writeText(value || '').then(() => {
+                btn.textContent = 'Copied';
+                setTimeout(() => btn.textContent = 'Copy', 1200);
+            });
+        });
+    });
+
+    resetComposerForm();
+</script>
+{% endblock %}

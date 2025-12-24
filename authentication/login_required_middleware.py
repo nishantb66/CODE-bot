@@ -37,6 +37,10 @@ class LoginRequiredMiddleware:
         '/api/auth/api/google/',
         '/api/auth/api/google/signup/',
         '/api/auth/api/refresh/',
+
+        # JWT Debugger - allow public access for convenience
+        '/jwt-debugger/',
+        '/api/jwt/',
         
         # Django admin (has its own auth)
         '/admin/',
